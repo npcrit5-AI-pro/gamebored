@@ -1,0 +1,19 @@
+                      INVADERS  score 0  wave 1  aliens 36
+
+
+               --------------------------------------------------
+
+                          M   M   M   M   M   M   M   M   M
+
+                          M   M   M   M   M   M   M   M   M
+
+                          M   M   M   M   M   M   M   M   M
+                                         |
+                          *   M   M   M   M   M   M   M   M
+
+                          *
+
+                                        *
+
+
+                                        <^>

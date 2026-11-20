@@ -1,0 +1,11 @@
+
+                              WORD GUESS (6 tries)
+
+                              [C] [R] [A] [T] [E]
+                              [C] [R] [A] [ ] [ ]
+                              [ ] [ ] [ ] [ ] [ ]
+                              [ ] [ ] [ ] [ ] [ ]
+                              [ ] [ ] [ ] [ ] [ ]
+                              [ ] [ ] [ ] [ ] [ ]
+
+                      green = right spot, yellow = in word
