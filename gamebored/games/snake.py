@@ -9,8 +9,9 @@ from .. import ui
 
 TITLE = "Snake"
 DESCRIPTION = "Eat, grow, don't crash!"
-CONTROLS = "Arrows/WASD move | q/Esc quit"
+CONTROLS = "Arrows/WASD move | p pause | ? help | q menu"
 GAME_ID = "snake"
+CATEGORY = "ACTION"
 
 UP, DOWN, LEFT, RIGHT = (0, -1), (0, 1), (-1, 0), (1, 0)
 
@@ -145,6 +146,25 @@ def play(stdscr, score_store):
             entry, _ = scores_mod.record_play(score_store, GAME_ID, st.score)
             scores_mod.save(score_store)
             return
+        elif key in ui.PAUSE_KEYS:
+            if ui.pause_overlay(stdscr) == "quit":
+                return
+            try:
+                stdscr.timeout(50)
+            except curses.error:
+                pass
+            last = time.time()
+            continue
+        if key in ui.HELP_KEYS:
+            ui.show_help_overlay(stdscr, TITLE, CONTROLS)
+            try:
+                stdscr.timeout(50)
+            except curses.error:
+                pass
+            last = time.time()
+            continue
+        if key == curses.KEY_RESIZE:
+            continue
         if key in KEYMAP:
             st.set_direction(KEYMAP[key])
         now = time.time()
@@ -164,14 +184,14 @@ def play(stdscr, score_store):
                     ["You %s!" % ("filled the board, champion" if won else "crashed"),
                      "Length: %d" % (len(st.snake))],
                     score=st.score, best=best, is_new_high=is_high,
-                    game_id=GAME_ID)
+                    game_id=GAME_ID, won=won)
                 return
         try:
             stdscr.clear()
         except curses.error:
             pass
         draw(stdscr, st)
-        ui.footer(stdscr, "%s | length %d" % (CONTROLS, len(st.snake)))
+        ui.game_footer(stdscr, "%s | length %d" % (CONTROLS, len(st.snake)))
         try:
             stdscr.refresh()
         except curses.error:

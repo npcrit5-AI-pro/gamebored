@@ -9,8 +9,9 @@ from .. import words as words_mod
 
 TITLE = "Hangman"
 DESCRIPTION = "Guess the secret word"
-CONTROLS = "Type letters a-z | q/Esc quit"
+CONTROLS = "Type letters a-z | p pause | ? help | q menu"
 GAME_ID = "hangman"
+CATEGORY = "CLASSIC"
 MAX_WRONG = 6
 
 # 2,800+ common words from gamebored/data/words.txt (4-8 letters).
@@ -110,7 +111,7 @@ def play(stdscr, score_store):
         except curses.error:
             pass
         draw(stdscr, st)
-        ui.footer(stdscr, CONTROLS + " | word: %d letters" % len(st.word))
+        ui.game_footer(stdscr, CONTROLS + " | word: %d letters" % len(st.word))
         try:
             stdscr.refresh()
         except curses.error:
@@ -125,6 +126,7 @@ def play(stdscr, score_store):
                 stdscr, TITLE,
                 ["You guessed it: %s!" % st.word if st.won
                  else "The word was: %s" % st.word],
+                won=st.won,
                 score=score, best=max(entry["high"], score),
                 is_new_high=is_high, game_id=GAME_ID)
             return
@@ -134,6 +136,15 @@ def play(stdscr, score_store):
             key = -1
         if key in ui.QUIT_KEYS:
             return
+        elif key in ui.PAUSE_KEYS:
+            if ui.pause_overlay(stdscr) == "quit":
+                return
+            continue
+        if key in ui.HELP_KEYS:
+            ui.show_help_overlay(stdscr, TITLE, CONTROLS)
+            continue
+        if key == curses.KEY_RESIZE:
+            continue
         if 0 <= key <= 255:
             ch = chr(key)
             if ch.isalpha():

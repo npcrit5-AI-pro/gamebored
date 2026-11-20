@@ -14,8 +14,9 @@ from .. import ui
 
 TITLE = "Frogger"
 DESCRIPTION = "Hop across the traffic!"
-CONTROLS = "Arrows/WASD hop | 5 crossings wins | q/Esc quit"
+CONTROLS = "Arrows/WASD hop | 5 crossings win | p pause | ? help | q menu"
 GAME_ID = "frogger"
+CATEGORY = "ACTION"
 
 LANES = 4
 CROSSINGS_TO_WIN = 5
@@ -175,6 +176,25 @@ def play(stdscr, score_store):
             scores_mod.record_play(score_store, GAME_ID, st.score)
             scores_mod.save(score_store)
             return
+        elif key in ui.PAUSE_KEYS:
+            if ui.pause_overlay(stdscr) == "quit":
+                return
+            try:
+                stdscr.timeout(90)
+            except curses.error:
+                pass
+            last = time.time()
+            continue
+        if key in ui.HELP_KEYS:
+            ui.show_help_overlay(stdscr, TITLE, CONTROLS)
+            try:
+                stdscr.timeout(90)
+            except curses.error:
+                pass
+            last = time.time()
+            continue
+        if key == curses.KEY_RESIZE:
+            continue
         if key in KEYMAP:
             dx, dy = KEYMAP[key]
             st.move(dx, dy)
@@ -190,14 +210,14 @@ def play(stdscr, score_store):
                  if st.won else "Squished! You crossed %d times." %
                  st.crossings],
                 score=st.score, best=max(entry["high"], st.score),
-                is_new_high=is_high, game_id=GAME_ID)
+                is_new_high=is_high, game_id=GAME_ID, won=st.won)
             return
         try:
             stdscr.clear()
         except curses.error:
             pass
         draw(stdscr, st)
-        ui.footer(stdscr, CONTROLS + " | score %d" % st.score)
+        ui.game_footer(stdscr, CONTROLS + " | score %d" % st.score)
         try:
             stdscr.refresh()
         except curses.error:

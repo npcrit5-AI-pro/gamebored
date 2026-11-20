@@ -13,8 +13,9 @@ from .. import ui
 
 TITLE = "Connect Four"
 DESCRIPTION = "Line up four vs the CPU"
-CONTROLS = "Left/Right move | Space/Enter or 1-7 drop | q/Esc quit"
+CONTROLS = "Left/Right move | Space/Enter or 1-7 drop | p pause | q menu"
 GAME_ID = "connect4"
+CATEGORY = "CLASSIC"
 
 ROWS, COLS = 6, 7
 WIN_SCORE, DRAW_SCORE = 150, 25
@@ -148,7 +149,7 @@ def play(stdscr, score_store):
             pass
         draw(stdscr, st)
         ui.centered(stdscr, 3 + ROWS + 2, message, ui.color(3))
-        ui.footer(stdscr, CONTROLS)
+        ui.game_footer(stdscr, CONTROLS)
         try:
             stdscr.refresh()
         except curses.error:
@@ -170,7 +171,7 @@ def play(stdscr, score_store):
                 end = "The CPU connected four. Rematch?"
             ui.game_over_screen(stdscr, TITLE, [end], score=score,
                                 best=max(entry["high"], score),
-                                is_new_high=is_high, game_id=GAME_ID)
+                                is_new_high=is_high, game_id=GAME_ID, won=won)
             return
         try:
             key = stdscr.getch()
@@ -178,6 +179,15 @@ def play(stdscr, score_store):
             key = -1
         if key in ui.QUIT_KEYS:
             return
+        elif key in ui.PAUSE_KEYS:
+            if ui.pause_overlay(stdscr) == "quit":
+                return
+            continue
+        if key in ui.HELP_KEYS:
+            ui.show_help_overlay(stdscr, TITLE, CONTROLS)
+            continue
+        if key == curses.KEY_RESIZE:
+            continue
         elif key == curses.KEY_LEFT:
             st.cursor = (st.cursor - 1) % COLS
         elif key == curses.KEY_RIGHT:

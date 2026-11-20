@@ -9,8 +9,9 @@ from .. import ui
 
 TITLE = "Minesweeper"
 DESCRIPTION = "Clear mines without boom"
-CONTROLS = "Arrows move | Space/Enter dig | f flag | q/Esc quit"
+CONTROLS = "Arrows move | Space/Enter dig | f flag | p pause | q menu"
 GAME_ID = "minesweeper"
+CATEGORY = "PUZZLE"
 
 ROWS, COLS, MINES = 9, 9, 10
 
@@ -163,7 +164,7 @@ def play(stdscr, score_store):
         except curses.error:
             pass
         draw(stdscr, st, tuple(cur))
-        ui.footer(stdscr, CONTROLS)
+        ui.game_footer(stdscr, CONTROLS)
         try:
             stdscr.refresh()
         except curses.error:
@@ -180,6 +181,7 @@ def play(stdscr, score_store):
                 stdscr, TITLE,
                 ["You cleared every mine! Time: %ds" % int(st.elapsed)
                  if st.won else "BOOM! You hit a mine."],
+                won=st.won,
                 score=score, best=max(entry["high"], score),
                 is_new_high=is_high, game_id=GAME_ID)
             return
@@ -189,6 +191,15 @@ def play(stdscr, score_store):
             key = -1
         if key in ui.QUIT_KEYS:
             return
+        elif key in ui.PAUSE_KEYS:
+            if ui.pause_overlay(stdscr) == "quit":
+                return
+            continue
+        if key in ui.HELP_KEYS:
+            ui.show_help_overlay(stdscr, TITLE, CONTROLS)
+            continue
+        if key == curses.KEY_RESIZE:
+            continue
         elif key == curses.KEY_UP:
             cur[0] = (cur[0] - 1) % ROWS
         elif key == curses.KEY_DOWN:

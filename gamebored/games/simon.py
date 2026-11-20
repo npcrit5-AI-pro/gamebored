@@ -14,8 +14,9 @@ from .. import ui
 
 TITLE = "Simon"
 DESCRIPTION = "Repeat the memory sequence"
-CONTROLS = "Watch, then press 1-4 | q/Esc quit"
+CONTROLS = "Watch, then press 1-4 | p pause | ? help | q menu"
 GAME_ID = "simon"
+CATEGORY = "PUZZLE"
 
 PADS = ("1", "2", "3", "4")
 
@@ -172,6 +173,15 @@ def play(stdscr, score_store):
                 scores_mod.record_play(score_store, GAME_ID, st.score)
                 scores_mod.save(score_store)
                 return
+            if key in ui.PAUSE_KEYS:
+                if ui.pause_overlay(stdscr) == "quit":
+                    return
+                continue
+            if key in ui.HELP_KEYS:
+                ui.show_help_overlay(stdscr, TITLE, CONTROLS)
+                continue
+            if key == curses.KEY_RESIZE:
+                continue
             if ord("1") <= key <= ord("4"):
                 result = st.press(key - ord("1"))
                 if result == "round":
@@ -188,5 +198,5 @@ def play(stdscr, score_store):
                 ["Wrong pad! You cleared %d round%s." % (
                     st.rounds, "" if st.rounds == 1 else "s")],
                 score=st.score, best=max(entry["high"], st.score),
-                is_new_high=is_high, game_id=GAME_ID)
+                is_new_high=is_high, game_id=GAME_ID, won=False)
             return

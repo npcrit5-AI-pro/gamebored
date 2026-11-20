@@ -22,6 +22,10 @@ def main(argv=None):
 
         for i, mod in enumerate(GAMES, 1):
             print("%2d. %-12s %s" % (i, mod.TITLE, mod.DESCRIPTION))
+        print(" W. Bored Wondering Search the web, keyless")
+        print(" H. High Scores   Every best in raw + Bored Points")
+        print(" T. Score Translator Raw number -> BP for any game")
+        print(" ?. Help           How to play everything")
         return 0
     from .app import run
 

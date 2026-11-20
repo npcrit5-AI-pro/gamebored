@@ -9,8 +9,9 @@ from .. import ui
 
 TITLE = "Block Stack"
 DESCRIPTION = "Tetris-style falling blocks"
-CONTROLS = "Left/Right move | Down soft-drop | Up rotate | Space hard-drop | q quit"
+CONTROLS = "Left/Right move | Down soft-drop | Up rotate | Space hard-drop | p pause | q menu"
 GAME_ID = "tetris"
+CATEGORY = "PUZZLE"
 
 W, H = 10, 20
 
@@ -181,6 +182,25 @@ def play(stdscr, score_store):
             scores_mod.record_play(score_store, GAME_ID, st.score)
             scores_mod.save(score_store)
             return
+        elif key in ui.PAUSE_KEYS:
+            if ui.pause_overlay(stdscr) == "quit":
+                return
+            try:
+                stdscr.timeout(50)
+            except curses.error:
+                pass
+            last = time.time()
+            continue
+        if key in ui.HELP_KEYS:
+            ui.show_help_overlay(stdscr, TITLE, CONTROLS)
+            try:
+                stdscr.timeout(50)
+            except curses.error:
+                pass
+            last = time.time()
+            continue
+        if key == curses.KEY_RESIZE:
+            continue
         elif key == curses.KEY_LEFT:
             st.move(-1, 0)
         elif key == curses.KEY_RIGHT:
@@ -205,14 +225,14 @@ def play(stdscr, score_store):
                     ["The stack reached the top!",
                      "Lines cleared: %d" % st.lines],
                     score=st.score, best=max(entry["high"], st.score),
-                    is_new_high=is_high, game_id=GAME_ID)
+                    is_new_high=is_high, game_id=GAME_ID, won=False)
                 return
         try:
             stdscr.clear()
         except curses.error:
             pass
         draw(stdscr, st)
-        ui.footer(stdscr, CONTROLS)
+        ui.game_footer(stdscr, CONTROLS)
         try:
             stdscr.refresh()
         except curses.error:

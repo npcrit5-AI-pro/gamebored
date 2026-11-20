@@ -55,9 +55,33 @@ def build_states():
 
     menu = FakeScreen()
     from gamebored import scores as scores_mod
-    from gamebored.app import draw_menu
-    draw_menu(menu, 2, {})
+    from gamebored.app import build_entries, draw_menu
+    draw_menu(menu, 2, {}, build_entries())
     states["menu"] = menu.text()
+
+    # Bored Wondering with sample results (no network: canned data)
+    from gamebored import wondering as wondering_mod
+    wscr = FakeScreen()
+    sample = [
+        {"title": "Python (programming language)", "source": "wikipedia",
+         "snippet": "Python is a high-level, general-purpose programming language.",
+         "url": "https://en.wikipedia.org/wiki/Python_(programming_language)"},
+        {"title": "Welcome to Python.org", "source": "duckduckgo",
+         "snippet": "The official home of the Python Programming Language.",
+         "url": "https://www.python.org/"},
+        {"title": "Uv is the best thing to happen to Python", "source": "hackernews",
+         "snippet": "by todsacerdoti - 312 points",
+         "url": "https://news.ycombinator.com/item?id=12345678"},
+    ]
+    wondering_mod.draw_screen(wscr, "python", sample, {}, 0, 0, False, "python")
+    states["wondering"] = wscr.text()
+
+    # Help screen (first page, rendered statically from the real lines)
+    from gamebored import extras as extras_mod
+    hscr = FakeScreen()
+    for i, ln in enumerate(extras_mod.build_help_lines(GAMES)[:20]):
+        hscr.addstr(2 + i, 3, ln)
+    states["help"] = hscr.text()
 
     st = snake.SnakeState(20, 14, seed=7)
     for _ in range(6):

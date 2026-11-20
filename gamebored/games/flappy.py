@@ -14,8 +14,9 @@ from .. import ui
 
 TITLE = "Flappy"
 DESCRIPTION = "Flap through the pipes!"
-CONTROLS = "Space/Up flap | q/Esc quit"
+CONTROLS = "Space/Up flap | p pause | ? help | q menu"
 GAME_ID = "flappy"
+CATEGORY = "ACTION"
 
 GRAVITY = 0.35
 FLAP_VY = -1.6
@@ -140,6 +141,25 @@ def play(stdscr, score_store):
             scores_mod.record_play(score_store, GAME_ID, st.score)
             scores_mod.save(score_store)
             return
+        elif key in ui.PAUSE_KEYS:
+            if ui.pause_overlay(stdscr) == "quit":
+                return
+            try:
+                stdscr.timeout(80)
+            except curses.error:
+                pass
+            last = time.time()
+            continue
+        if key in ui.HELP_KEYS:
+            ui.show_help_overlay(stdscr, TITLE, CONTROLS)
+            try:
+                stdscr.timeout(80)
+            except curses.error:
+                pass
+            last = time.time()
+            continue
+        if key == curses.KEY_RESIZE:
+            continue
         flap = key in (ord(" "), curses.KEY_UP, ord("w"), ord("W"))
         alive = st.step(flap=flap)
         try:
@@ -147,7 +167,7 @@ def play(stdscr, score_store):
         except curses.error:
             pass
         draw(stdscr, st)
-        ui.footer(stdscr, CONTROLS + " | pipes %d" % st.score)
+        ui.game_footer(stdscr, CONTROLS + " | pipes %d" % st.score)
         try:
             stdscr.refresh()
         except curses.error:
@@ -162,6 +182,6 @@ def play(stdscr, score_store):
                 ["You threaded %d pipe%s!" % (
                     st.score, "" if st.score == 1 else "s")],
                 score=st.score, best=max(entry["high"], st.score),
-                is_new_high=is_high, game_id=GAME_ID)
+                is_new_high=is_high, game_id=GAME_ID, won=False)
             return
         time.sleep(0.02)

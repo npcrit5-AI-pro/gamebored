@@ -21,4 +21,4 @@
 
 
 
- Arrows/WASD move | q/Esc quit
+ Arrows/WASD move | p pause | ? help | q menu
