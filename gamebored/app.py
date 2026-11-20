@@ -133,8 +133,8 @@ def draw_menu(win, selected, score_store, entries=None):
                 entry["hotkey"], entry["title"][:12], entry["desc"][:22],
                 best, _commas(bp))
         else:
-            label = " %s  %-15s  %-30s" % (
-                entry["hotkey"], entry["title"][:15], entry["desc"][:30])
+            label = " %s  %-17s  %-28s" % (
+                entry["hotkey"], entry["title"][:17], entry["desc"][:28])
         label = label[: max(0, w - 4)]
         x = max(0, (w - len(label)) // 2)
         if idx == selected % len(entries):
