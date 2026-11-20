@@ -8,8 +8,9 @@ from .. import ui
 
 TITLE = "Breakout"
 DESCRIPTION = "Bounce ball, smash bricks"
-CONTROLS = "Left/Right or A/D move paddle | q/Esc quit | 3 lives"
+CONTROLS = "Left/Right or A/D move paddle | 3 lives | p pause | q menu"
 GAME_ID = "breakout"
+CATEGORY = "ACTION"
 
 BRICK_ROWS, BRICK_COLS = 5, 10
 
@@ -131,6 +132,25 @@ def play(stdscr, score_store):
                                    won=st.won)
             scores_mod.save(score_store)
             return
+        elif key in ui.PAUSE_KEYS:
+            if ui.pause_overlay(stdscr) == "quit":
+                return
+            try:
+                stdscr.timeout(50)
+            except curses.error:
+                pass
+            last = time.time()
+            continue
+        if key in ui.HELP_KEYS:
+            ui.show_help_overlay(stdscr, TITLE, CONTROLS)
+            try:
+                stdscr.timeout(50)
+            except curses.error:
+                pass
+            last = time.time()
+            continue
+        if key == curses.KEY_RESIZE:
+            continue
         elif key in (curses.KEY_LEFT, ord("a"), ord("A")):
             move = -2
         elif key in (curses.KEY_RIGHT, ord("d"), ord("D")):
@@ -150,7 +170,7 @@ def play(stdscr, score_store):
                     ["You smashed every brick!" if st.won
                      else "Out of lives!"],
                     score=score, best=max(entry["high"], score),
-                    is_new_high=is_high, game_id=GAME_ID)
+                    is_new_high=is_high, game_id=GAME_ID, won=st.won)
                 return
         try:
             stdscr.clear()
@@ -160,7 +180,7 @@ def play(stdscr, score_store):
         ox = max(0, (w2 - st.width) // 2)
         oy = max(2, (h2 - st.height) // 2)
         draw(stdscr, st, ox, oy)
-        ui.footer(stdscr, CONTROLS)
+        ui.game_footer(stdscr, CONTROLS)
         try:
             stdscr.refresh()
         except curses.error:

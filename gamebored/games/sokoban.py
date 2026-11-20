@@ -12,8 +12,9 @@ from .. import ui
 
 TITLE = "Sokoban"
 DESCRIPTION = "Push boxes onto targets"
-CONTROLS = "Arrows/WASD push | r restart room | q/Esc quit"
+CONTROLS = "Arrows/WASD push | r restart room | p pause | ? help | q menu"
 GAME_ID = "sokoban"
+CATEGORY = "PUZZLE"
 
 LEVELS = (
     (
@@ -173,7 +174,7 @@ def play(stdscr, score_store):
         except curses.error:
             pass
         draw(stdscr, st, st.score)
-        ui.footer(stdscr, CONTROLS + " | home %d/%d" % (
+        ui.game_footer(stdscr, CONTROLS + " | home %d/%d" % (
             st.boxes_home, len(st.boxes)))
         try:
             stdscr.refresh()
@@ -189,7 +190,7 @@ def play(stdscr, score_store):
                 ["All rooms cleared, warehouse hero!" if st.won
                  else "Room %d unfinished." % (st.level + 1)],
                 score=st.score, best=max(entry["high"], st.score),
-                is_new_high=is_high, game_id=GAME_ID)
+                is_new_high=is_high, game_id=GAME_ID, won=st.won)
             return
         try:
             key = stdscr.getch()
@@ -200,6 +201,15 @@ def play(stdscr, score_store):
                                    won=st.won)
             scores_mod.save(score_store)
             return
+        elif key in ui.PAUSE_KEYS:
+            if ui.pause_overlay(stdscr) == "quit":
+                return
+            continue
+        if key in ui.HELP_KEYS:
+            ui.show_help_overlay(stdscr, TITLE, CONTROLS)
+            continue
+        if key == curses.KEY_RESIZE:
+            continue
         if key in (ord("r"), ord("R")):
             st.restart()
         elif key in KEYMAP:

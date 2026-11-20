@@ -8,8 +8,9 @@ from .. import ui
 
 TITLE = "Pong"
 DESCRIPTION = "Classic paddle duel vs CPU"
-CONTROLS = "Up/Down or W/S move | first to 5 | q/Esc quit"
+CONTROLS = "Up/Down or W/S move | first to 5 | p pause | q menu"
 GAME_ID = "pong"
+CATEGORY = "ACTION"
 WIN_SCORE = 5
 
 
@@ -129,6 +130,25 @@ def play(stdscr, score_store):
                                    st.player_score * 20, won=st.won)
             scores_mod.save(score_store)
             return
+        elif key in ui.PAUSE_KEYS:
+            if ui.pause_overlay(stdscr) == "quit":
+                return
+            try:
+                stdscr.timeout(50)
+            except curses.error:
+                pass
+            last = time.time()
+            continue
+        if key in ui.HELP_KEYS:
+            ui.show_help_overlay(stdscr, TITLE, CONTROLS)
+            try:
+                stdscr.timeout(50)
+            except curses.error:
+                pass
+            last = time.time()
+            continue
+        if key == curses.KEY_RESIZE:
+            continue
         elif key in (curses.KEY_UP, ord("w"), ord("W")):
             player_move = -1
         elif key in (curses.KEY_DOWN, ord("s"), ord("S")):
@@ -154,7 +174,7 @@ def play(stdscr, score_store):
                      if st.won else "CPU wins %d:%d. Rematch?" % (
                          st.cpu_score, st.player_score)],
                     score=score, best=max(entry["high"], score),
-                    is_new_high=is_high, game_id=GAME_ID)
+                    is_new_high=is_high, game_id=GAME_ID, won=st.won)
                 return
             # decay movement so holding isn't required
             if key == -1:
@@ -169,7 +189,7 @@ def play(stdscr, score_store):
         ox = max(0, (w - fw) // 2)
         oy = max(1, (h - fh) // 2)
         draw(stdscr, st, ox, oy)
-        ui.footer(stdscr, CONTROLS)
+        ui.game_footer(stdscr, CONTROLS)
         try:
             stdscr.refresh()
         except curses.error:

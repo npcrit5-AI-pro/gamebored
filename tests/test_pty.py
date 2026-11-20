@@ -165,3 +165,95 @@ def test_resize_back_to_full_restores_menu():
         expect_menu(child)
     finally:
         close(child)
+
+
+MENU_EXTRAS_RE = re.compile(r"Bored Wondering", re.S)
+HELP_RE = re.compile(r"GAMEBORED HELP", re.S)
+SCORES_RE = re.compile(r"HIGH SCORES", re.S)
+TRANSLATOR_RE = re.compile(r"SCORE TRANSLATOR", re.S)
+WONDER_RE = re.compile(r"BORED WONDERING", re.S)
+PAUSED_RE = re.compile(r"PAUSED", re.S)
+
+
+def test_menu_shows_grouped_entries_and_footer():
+    child = spawn()
+    try:
+        expect_menu(child)
+        child.expect(re.compile(r"ACTION", re.S), timeout=5)
+        child.expect(re.compile(r"Combined total: .* BP", re.S), timeout=5)
+        for _ in range(16):  # scroll down to the EXPLORE group
+            child.send("\x1b[B")
+            time.sleep(0.15)
+        child.expect(re.compile(r"EXPLORE", re.S), timeout=5)
+        child.expect(MENU_EXTRAS_RE, timeout=5)
+        child.expect(re.compile(r"Score Translator", re.S), timeout=5)
+    finally:
+        close(child)
+
+
+def test_hotkeys_open_and_close_extra_screens():
+    child = spawn()
+    try:
+        expect_menu(child)
+        for key, pattern in (("H", SCORES_RE), ("T", TRANSLATOR_RE),
+                             ("?", HELP_RE)):
+            child.send(key)
+            time.sleep(1.0)
+            child.expect(pattern, timeout=5)
+            child.send("q")  # back to menu (help closes on any key)
+            time.sleep(0.8)
+            expect_menu(child)
+    finally:
+        close(child)
+
+
+def test_wondering_search_flow_stays_friendly():
+    child = spawn()
+    try:
+        expect_menu(child)
+        child.send("W")
+        time.sleep(1.0)
+        child.expect(WONDER_RE, timeout=5)
+        child.send("penguins")
+        time.sleep(0.5)
+        child.send("\r")  # search (live APIs or friendly offline message)
+        time.sleep(6.0)
+        child.expect(re.compile(r"results for|No internet|No results", re.S),
+                     timeout=15)
+        child.send("\x1b")  # Esc back to menu
+        time.sleep(1.0)
+        quit_to_menu(child)
+    finally:
+        close(child)
+
+
+def test_pause_overlay_resumes_game():
+    child = spawn()
+    try:
+        expect_menu(child)
+        child.send("1")  # snake
+        time.sleep(1.5)
+        child.send("p")
+        time.sleep(0.8)
+        child.expect(PAUSED_RE, timeout=5)
+        child.send("p")  # resume
+        time.sleep(0.8)
+        quit_to_menu(child)
+    finally:
+        close(child)
+
+
+def test_in_game_help_overlay_closes_cleanly():
+    child = spawn()
+    try:
+        expect_menu(child)
+        child.send("1")  # snake
+        time.sleep(1.5)
+        child.send("?")
+        time.sleep(0.8)
+        child.expect(HELP_RE, timeout=5)
+        child.send("x")  # any key closes the overlay
+        time.sleep(0.8)
+        quit_to_menu(child)
+    finally:
+        close(child)

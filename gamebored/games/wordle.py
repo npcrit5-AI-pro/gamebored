@@ -9,8 +9,9 @@ from .. import words as words_mod
 
 TITLE = "Word Guess"
 DESCRIPTION = "Wordle-style: 6 tries"
-CONTROLS = "Type letters | Enter submit | Backspace delete | q/Esc quit"
+CONTROLS = "Type + Enter submit | Backspace delete | p pause | q menu"
 GAME_ID = "wordle"
+CATEGORY = "PUZZLE"
 WORD_LEN = 5
 TRIES = 6
 
@@ -168,7 +169,7 @@ def play(stdscr, score_store):
         except curses.error:
             pass
         draw(stdscr, st)
-        ui.footer(stdscr, CONTROLS)
+        ui.game_footer(stdscr, CONTROLS)
         try:
             stdscr.refresh()
         except curses.error:
@@ -187,6 +188,7 @@ def play(stdscr, score_store):
                 stdscr, TITLE,
                 ["Brilliant! The word was %s" % st.answer if st.won
                  else "The word was: %s" % st.answer],
+                won=st.won,
                 score=score, best=max(entry["high"], score),
                 is_new_high=is_high, game_id=GAME_ID)
             return
@@ -200,6 +202,15 @@ def play(stdscr, score_store):
             except curses.error:
                 pass
             return
+        elif key in ui.PAUSE_KEYS:
+            if ui.pause_overlay(stdscr) == "quit":
+                return
+            continue
+        if key in ui.HELP_KEYS:
+            ui.show_help_overlay(stdscr, TITLE, CONTROLS)
+            continue
+        if key == curses.KEY_RESIZE:
+            continue
         elif key in (10, 13, curses.KEY_ENTER):
             st.submit()
         elif key in (curses.KEY_BACKSPACE, 127, 8):

@@ -9,8 +9,9 @@ from .. import ui
 
 TITLE = "Invaders"
 DESCRIPTION = "Shoot the descending aliens"
-CONTROLS = "Left/Right or A/D move | Space shoot | q/Esc quit"
+CONTROLS = "Left/Right or A/D move | Space shoot | p pause | q menu"
 GAME_ID = "invaders"
+CATEGORY = "ACTION"
 
 COLS, ROWS = 9, 4
 
@@ -149,6 +150,25 @@ def play(stdscr, score_store):
             scores_mod.record_play(score_store, GAME_ID, st.score)
             scores_mod.save(score_store)
             return
+        elif key in ui.PAUSE_KEYS:
+            if ui.pause_overlay(stdscr) == "quit":
+                return
+            try:
+                stdscr.timeout(50)
+            except curses.error:
+                pass
+            last = time.time()
+            continue
+        if key in ui.HELP_KEYS:
+            ui.show_help_overlay(stdscr, TITLE, CONTROLS)
+            try:
+                stdscr.timeout(50)
+            except curses.error:
+                pass
+            last = time.time()
+            continue
+        if key == curses.KEY_RESIZE:
+            continue
         elif key in (curses.KEY_LEFT, ord("a"), ord("A")):
             move = -1
         elif key in (curses.KEY_RIGHT, ord("d"), ord("D")):
@@ -171,7 +191,7 @@ def play(stdscr, score_store):
                     ["The aliens landed. Earth needs a rematch!",
                      "Waves cleared: %d" % (st.level - 1)],
                     score=st.score, best=max(entry["high"], st.score),
-                    is_new_high=is_high, game_id=GAME_ID)
+                    is_new_high=is_high, game_id=GAME_ID, won=False)
                 return
         try:
             stdscr.clear()
@@ -181,7 +201,7 @@ def play(stdscr, score_store):
         ox = max(0, (w2 - st.width) // 2)
         oy = max(2, (h2 - st.height) // 2)
         draw(stdscr, st, ox, oy)
-        ui.footer(stdscr, CONTROLS)
+        ui.game_footer(stdscr, CONTROLS)
         try:
             stdscr.refresh()
         except curses.error:

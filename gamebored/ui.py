@@ -1,8 +1,9 @@
 """Shared curses UI helpers for GameBored.
 
 Everything here degrades gracefully: small terminals get a friendly
-'make the window bigger' message instead of a curses crash, and every
-addstr/addch call is guarded against writing past the screen edge.
+'make the window bigger' message instead of a curses crash, every
+addstr/addch call is guarded against writing past the screen edge, and
+all color use falls back to plain text when the terminal has no color.
 """
 
 import curses
@@ -14,6 +15,11 @@ MIN_W = 80
 
 TITLE = "GAMEBORED"
 QUIT_KEYS = (27, ord("q"), ord("Q"))  # Esc / q
+PAUSE_KEYS = (ord("p"), ord("P"))
+HELP_KEYS = (ord("?"),)
+
+FOOTER_HELP = "Up/Down move | Enter open | 1-9,0/W/H/T/? shortcuts | q quit"
+GAME_FOOTER_SUFFIX = "p pause | ? help | q menu"
 
 
 def init_colors():
@@ -47,6 +53,14 @@ def init_colors():
                 pass
     except curses.error:
         pass
+
+
+def has_color():
+    """True when the terminal can actually show colors."""
+    try:
+        return bool(curses.has_colors())
+    except curses.error:
+        return False
 
 
 def color(num):
@@ -108,11 +122,17 @@ def show_too_small(win, min_h=MIN_H, min_w=MIN_W):
             "",
             "Press q to quit, any other key to retry.",
         ]
-        y = max(0, h // 2 - len(lines) // 2)
-        for line in lines:
-            x = max(0, (w - len(line)) // 2)
-            safe_addstr(win, y, x, line, color(3) | curses.A_BOLD)
-            y += 1
+        box_w = min(max(len(ln) for ln in lines) + 6, max(10, w - 2))
+        box_h = len(lines) + 2
+        y0 = max(0, (h - box_h) // 2)
+        x0 = max(0, (w - box_w) // 2)
+        for i in range(box_h):
+            safe_addstr(win, y0 + i, x0, " " * box_w, color(10))
+        for i, line in enumerate(lines):
+            attr = curses.A_BOLD
+            if i == 0:
+                attr |= color(3)
+            centered(win, y0 + 1 + i, line[:box_w], attr)
         win.refresh()
     except curses.error:
         pass
@@ -132,6 +152,239 @@ def footer(win, text):
         safe_addstr(win, h - 1, 0, (" " + text)[: max(0, w - 1)], color(7))
     except curses.error:
         pass
+
+
+def game_footer(win, controls):
+    """Consistent in-game key-hint bar: controls + pause/help/menu keys."""
+    footer(win, "%s  |  %s" % (controls, GAME_FOOTER_SUFFIX))
+
+
+def header(win, title, subtitle=""):
+    """Consistent screen header: bold title, optional dim subtitle."""
+    try:
+        centered(win, 0, title, color(1) | curses.A_BOLD)
+        if subtitle:
+            centered(win, 1, subtitle, color(7))
+    except curses.error:
+        pass
+
+
+def draw_frame(win, y0, x0, box_h, box_w, title="", fill=None):
+    """Draw a bordered panel. Never raises on small screens."""
+    try:
+        h, w = win.getmaxyx()
+        y0 = max(0, y0)
+        x0 = max(0, x0)
+        box_h = min(box_h, h - y0)
+        box_w = min(box_w, w - x0)
+        if box_h < 3 or box_w < 4:
+            return False
+        if fill is not None:
+            for i in range(box_h):
+                safe_addstr(win, y0 + i, x0, " " * box_w, fill)
+        # corners + edges
+        safe_addch(win, y0, x0, ord("+"), color(1) | curses.A_BOLD)
+        safe_addch(win, y0, x0 + box_w - 1, ord("+"), color(1) | curses.A_BOLD)
+        safe_addch(win, y0 + box_h - 1, x0, ord("+"), color(1) | curses.A_BOLD)
+        safe_addch(win, y0 + box_h - 1, x0 + box_w - 1, ord("+"),
+                   color(1) | curses.A_BOLD)
+        for x in range(1, box_w - 1):
+            safe_addch(win, y0, x0 + x, ord("-"), color(1))
+            safe_addch(win, y0 + box_h - 1, x0 + x, ord("-"), color(1))
+        for y in range(1, box_h - 1):
+            safe_addch(win, y0 + y, x0, ord("|"), color(1))
+            safe_addch(win, y0 + y, x0 + box_w - 1, ord("|"), color(1))
+        if title:
+            label = " %s " % title[: max(0, box_w - 4)]
+            safe_addstr(win, y0, x0 + max(1, (box_w - len(label)) // 2),
+                        label, color(3) | curses.A_BOLD)
+        return True
+    except curses.error:
+        return False
+
+
+def pause_overlay(win, title="PAUSED"):
+    """Show a pause panel. Returns 'quit' if the user wants the menu.
+
+    Any of p/P/Enter/Space resumes; q/Esc quits to the menu. Resize just
+    redraws the panel instead of crashing.
+    """
+    try:
+        win.timeout(-1)
+    except curses.error:
+        pass
+    while True:
+        try:
+            h, w = win.getmaxyx()
+            box_w = min(44, w - 4)
+            lines = [
+                title,
+                "",
+                "Take a breather. Your game is waiting.",
+                "",
+                "p/Enter resume    q/Esc quit to menu",
+            ]
+            box_h = len(lines) + 2
+            y0 = max(0, (h - box_h) // 2)
+            x0 = max(0, (w - box_w) // 2)
+            draw_frame(win, y0, x0, box_h, box_w, title="II")
+            for i, ln in enumerate(lines):
+                attr = curses.A_BOLD
+                if i == 0:
+                    attr |= color(3)
+                centered(win, y0 + 1 + i, ln[:box_w], attr)
+            footer(win, "p resume | q quit to menu")
+            win.refresh()
+        except curses.error:
+            pass
+        try:
+            key = win.getch()
+        except curses.error:
+            key = -1
+        if key in QUIT_KEYS:
+            return "quit"
+        if key in PAUSE_KEYS or key in (10, 13, 32, curses.KEY_ENTER):
+            return "resume"
+        if key == curses.KEY_RESIZE:
+            continue
+        if key != -1:
+            return "resume"
+
+
+HELP_LINES = [
+    ("Move / pick", "Up/Down arrows (or j/k), Enter to open"),
+    ("Hotkeys", "1-9,0 games - W search - H scores - T points - ? this help"),
+    ("In every game", "Arrows/WASD play - p pause - ? help - q/Esc menu"),
+    ("Scores", "Best score per game is saved automatically"),
+    ("Tiny window?", "Make it 80x24 or bigger; nothing breaks"),
+]
+
+
+def show_help_overlay(win, game_title="", controls=""):
+    """Pop-up help panel used from the menu and inside every game."""
+    try:
+        win.timeout(-1)
+    except curses.error:
+        pass
+    while True:
+        try:
+            h, w = win.getmaxyx()
+            lines = ["GAMEBORED HELP", ""]
+            for k, v in HELP_LINES:
+                lines.append("%-12s  %s" % (k + ":", v))
+            if game_title and controls:
+                lines.append("")
+                lines.append("%s: %s" % (game_title, controls))
+            lines.append("")
+            lines.append("Press any key to go back (q/Esc just closes this)")
+            box_w = min(max(len(ln) for ln in lines) + 4, w - 2)
+            box_h = min(len(lines) + 2, h)
+            y0 = max(0, (h - box_h) // 2)
+            x0 = max(0, (w - box_w) // 2)
+            draw_frame(win, y0, x0, box_h, box_w, title="?")
+            for i, ln in enumerate(lines):
+                if y0 + 1 + i >= y0 + box_h - 1:
+                    break
+                attr = 0
+                if i == 0:
+                    attr = color(1) | curses.A_BOLD
+                safe_addstr(win, y0 + 1 + i, x0 + 2, ln[: box_w - 4], attr)
+            win.refresh()
+        except curses.error:
+            pass
+        try:
+            key = win.getch()
+        except curses.error:
+            key = -1
+        if key == curses.KEY_RESIZE:
+            continue
+        if key != -1:
+            return key
+
+
+def game_over_screen(win, game_title, lines, score=None, best=None,
+                     is_new_high=False, game_id=None, won=None):
+    """Show a friendly game-over panel. Returns after any keypress.
+
+    When game_id is given, score/best lines also show the translation into
+    the universal Bored Points (BP) language, e.g. 'Score: 248 -> 1,240 BP'.
+    """
+    try:
+        win.timeout(-1)
+    except curses.error:
+        pass
+    try:
+        h, w = win.getmaxyx()
+        if won is True:
+            headline = "YOU WIN!  %s" % game_title
+            head_attr = color(2) | curses.A_BOLD
+            flair = "Nicely played!"
+        elif won is False:
+            headline = "GAME OVER: %s" % game_title
+            head_attr = color(5) | curses.A_BOLD
+            flair = "Good try - one more run?"
+        else:
+            headline = "GAME OVER: %s" % game_title
+            head_attr = color(3) | curses.A_BOLD
+            flair = "Thanks for playing!"
+        box_lines = [headline, flair, ""]
+        for ln in lines:
+            box_lines.append(ln)
+        if score is not None:
+            box_lines.append("")
+            if game_id in (translator_mod.CONVERSIONS or {}):
+                box_lines.append("Score: %s" % translator_mod.format_score(
+                    game_id, score))
+            else:
+                box_lines.append("Score: %s" % score)
+        if best is not None:
+            if game_id in (translator_mod.CONVERSIONS or {}):
+                box_lines.append("Best:  %s" % translator_mod.format_score(
+                    game_id, best))
+            else:
+                box_lines.append("Best:  %s" % best)
+        if is_new_high:
+            box_lines.append("NEW HIGH SCORE!")
+        box_lines.append("")
+        box_lines.append("Enter/q: back to menu")
+        box_w = min(w - 4, max(40, max(len(ln) for ln in box_lines) + 6))
+        box_h = min(len(box_lines) + 2, h)
+        y0 = max(0, (h - box_h) // 2)
+        x0 = max(0, (w - box_w) // 2)
+        try:
+            win.clear()
+        except curses.error:
+            pass
+        draw_frame(win, y0, x0, box_h, box_w, title="*")
+        for i, ln in enumerate(box_lines):
+            if y0 + 1 + i >= y0 + box_h - 1:
+                break
+            attr = 0
+            if i == 0:
+                attr = head_attr
+            elif ln == "NEW HIGH SCORE!":
+                attr = color(3) | curses.A_BOLD | curses.A_BLINK
+            elif ln == "Enter/q: back to menu":
+                attr = color(7)
+            centered(win, y0 + 1 + i, ln[:box_w], attr)
+        footer(win, "Enter/q back to menu")
+        win.refresh()
+        while True:
+            try:
+                key = win.getch()
+            except curses.error:
+                key = -1
+            if key == curses.KEY_RESIZE:
+                return key
+            if key != -1:
+                return key
+    except curses.error:
+        return -1
+
+
+def confirm_quit_game(win):
+    """Not used as a popup; games quit directly on q/Esc for snappiness."""
+    return True
 
 
 _ARROW_TAILS = {65: 259, 66: 258, 67: 261, 68: 260}  # A/B/C/D -> up/dn/right/left
@@ -219,7 +472,6 @@ def get_key(win, delay=-1):
         pass
     if len(tail) == 2 and tail[0] in (91, 79) and tail[1] in _ARROW_TAILS:
         want = _ARROW_TAILS[tail[1]]
-        up = _key_values("KEY_UP")
         mapping = {65: "KEY_UP", 66: "KEY_DOWN", 67: "KEY_RIGHT",
                    68: "KEY_LEFT"}
         resolved = _key_values(mapping[tail[1]])
@@ -230,75 +482,3 @@ def get_key(win, delay=-1):
         except curses.error:
             pass
     return 27
-
-
-def game_over_screen(win, game_title, lines, score=None, best=None,
-                     is_new_high=False, game_id=None):
-    """Show a game-over panel. Returns after any keypress. Returns the key.
-
-    When game_id is given, score/best lines also show the translation into
-    the universal Bored Points (BP) language, e.g. 'Score: 248 -> 1,240 BP'.
-    """
-    try:
-        win.timeout(-1)
-    except curses.error:
-        pass
-    try:
-        h, w = win.getmaxyx()
-        box_w = min(w - 4, 52)
-        box_lines = []
-        box_lines.append("  GAME OVER: %s  " % game_title)
-        box_lines.append("")
-        for ln in lines:
-            box_lines.append(ln)
-        if score is not None:
-            box_lines.append("")
-            if game_id in (translator_mod.CONVERSIONS or {}):
-                box_lines.append("Score: %s" % translator_mod.format_score(
-                    game_id, score))
-            else:
-                box_lines.append("Score: %s" % score)
-        if best is not None:
-            if game_id in (translator_mod.CONVERSIONS or {}):
-                box_lines.append("Best:  %s" % translator_mod.format_score(
-                    game_id, best))
-            else:
-                box_lines.append("Best:  %s" % best)
-        if is_new_high:
-            box_lines.append("NEW HIGH SCORE!")
-        box_lines.append("")
-        box_lines.append("Press Enter/q to return to the menu")
-        box_h = len(box_lines) + 2
-        y0 = max(0, (h - box_h) // 2)
-        x0 = max(0, (w - box_w) // 2)
-        try:
-            win.clear()
-        except curses.error:
-            pass
-        try:
-            for i in range(box_h):
-                safe_addstr(win, y0 + i, x0, " " * box_w, color(10))
-        except curses.error:
-            pass
-        for i, ln in enumerate(box_lines):
-            attr = curses.A_BOLD
-            if ln == "NEW HIGH SCORE!":
-                attr = curses.A_BOLD | curses.A_BLINK
-            centered(win, y0 + 1 + i, ln[:box_w], attr)
-        win.refresh()
-        while True:
-            try:
-                key = win.getch()
-            except curses.error:
-                key = -1
-            if key == curses.KEY_RESIZE:
-                return key
-            if key != -1:
-                return key
-    except curses.error:
-        return -1
-
-
-def confirm_quit_game(win):
-    """Not used as a popup; games quit directly on q/Esc for snappiness."""
-    return True

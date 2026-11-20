@@ -7,8 +7,9 @@ from .. import ui
 
 TITLE = "Tic-Tac-Toe"
 DESCRIPTION = "Beat the computer at X/O"
-CONTROLS = "Arrows move | Space/Enter place | 1-9 quick place | q/Esc quit"
+CONTROLS = "Arrows move | Space/Enter place | 1-9 quick | p pause | q menu"
 GAME_ID = "tictactoe"
+CATEGORY = "CLASSIC"
 
 LINES = (
     (0, 1, 2), (3, 4, 5), (6, 7, 8),
@@ -154,7 +155,7 @@ def play(stdscr, score_store):
         except curses.error:
             pass
         draw(stdscr, st)
-        ui.footer(stdscr, CONTROLS)
+        ui.game_footer(stdscr, CONTROLS)
         try:
             stdscr.refresh()
         except curses.error:
@@ -168,7 +169,7 @@ def play(stdscr, score_store):
                                                 won=won)
             scores_mod.save(score_store)
             ui.game_over_screen(
-                stdscr, TITLE, [_end_message(w)],
+                stdscr, TITLE, [_end_message(w)], won=won,
                 score=score, best=max(entry["high"], score),
                 is_new_high=is_high, game_id=GAME_ID)
             return
@@ -178,6 +179,15 @@ def play(stdscr, score_store):
             key = -1
         if key in ui.QUIT_KEYS:
             return
+        elif key in ui.PAUSE_KEYS:
+            if ui.pause_overlay(stdscr) == "quit":
+                return
+            continue
+        if key in ui.HELP_KEYS:
+            ui.show_help_overlay(stdscr, TITLE, CONTROLS)
+            continue
+        if key == curses.KEY_RESIZE:
+            continue
         elif key == curses.KEY_UP:
             st.cursor = (st.cursor - 3) % 9
         elif key == curses.KEY_DOWN:

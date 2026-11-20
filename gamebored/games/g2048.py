@@ -8,8 +8,9 @@ from .. import ui
 
 TITLE = "2048"
 DESCRIPTION = "Slide and merge to 2048"
-CONTROLS = "Arrows/WASD slide | r restart | q/Esc quit"
+CONTROLS = "Arrows/WASD slide | r restart | p pause | ? help | q menu"
 GAME_ID = "g2048"
+CATEGORY = "PUZZLE"
 SIZE = 4
 
 
@@ -182,7 +183,7 @@ def play(stdscr, score_store):
         except curses.error:
             pass
         draw(stdscr, st)
-        ui.footer(stdscr, CONTROLS)
+        ui.game_footer(stdscr, CONTROLS)
         try:
             stdscr.refresh()
         except curses.error:
@@ -196,6 +197,7 @@ def play(stdscr, score_store):
                 stdscr, TITLE,
                 ["No more moves!" if not st.won else "Amazing run!",
                  "Final board score: %d" % st.score],
+                won=st.won,
                 score=st.score, best=max(entry["high"], st.score),
                 is_new_high=is_high, game_id=GAME_ID)
             return
@@ -207,6 +209,15 @@ def play(stdscr, score_store):
             scores_mod.record_play(score_store, GAME_ID, st.score, won=st.won)
             scores_mod.save(score_store)
             return
+        elif key in ui.PAUSE_KEYS:
+            if ui.pause_overlay(stdscr) == "quit":
+                return
+            continue
+        if key in ui.HELP_KEYS:
+            ui.show_help_overlay(stdscr, TITLE, CONTROLS)
+            continue
+        if key == curses.KEY_RESIZE:
+            continue
         if key in (ord("r"), ord("R")):
             st = State2048()
         elif key in KEYS:

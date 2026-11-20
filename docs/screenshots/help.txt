@@ -1,0 +1,22 @@
+
+
+   Welcome to GameBored! Pick a game, play, come back.
+
+   MENU
+     Up/Down (or j/k) moves - Enter opens the highlighted entry.
+     Hotkeys: 1-9,0,a-e games - W search - H scores - T translator.
+     ? shows this help - q/Esc quits.
+
+   WHILE PLAYING
+     Arrows/WASD play - p pauses - ? helps - q/Esc back to menu.
+     The bar at the bottom always lists the keys for that game.
+
+   EXPLORE
+     Bored Wondering (W): search the web from inside the app.
+     High Scores (H): every best score, raw and in Bored Points.
+     Score Translator (T): convert any raw score to Bored Points.
+
+   GAMES
+     Snake         Eat, grow, don't crash!
+        keys: Arrows/WASD move | p pause | ? help | q menu
+     Block Stack   Tetris-style falling blocks
