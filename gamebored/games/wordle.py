@@ -5,6 +5,7 @@ import random
 
 from .. import scores as scores_mod
 from .. import ui
+from .. import words as words_mod
 
 TITLE = "Word Guess"
 DESCRIPTION = "Wordle-style: 6 tries"
@@ -43,8 +44,15 @@ ALLOWED = set(ANSWERS) | {
     "CLIMB", "CLOCK", "CLOSE", "CLOTH", "COACH", "COAST", "COLOR",
     "COMET", "CORNER", "COUCH", "COULD", "COUNT", "COURT", "COVER",
     "CRACK", "CRASH", "CRAZY", "CREAM", "CRIME", "CRISP", "CROSS",
-    "CROWD", "CROWN", "CRUDE", "CRUSH", "CURVE", "CYCLE", "DAILY",
+    "CROWD", "CROWN", "CRUDE", "CRUSH",     "CURVE", "CYCLE", "DAILY",
 }
+
+# 1,000+ five-letter words from gamebored/data/words5.txt (no network
+# fetch at runtime). Replaces the small built-in lists above when present.
+_DATA_ANSWERS = words_mod.load_words5()
+if _DATA_ANSWERS:
+    ANSWERS = _DATA_ANSWERS
+    ALLOWED = set(ANSWERS)
 
 
 def feedback(answer, guess):
@@ -180,7 +188,7 @@ def play(stdscr, score_store):
                 ["Brilliant! The word was %s" % st.answer if st.won
                  else "The word was: %s" % st.answer],
                 score=score, best=max(entry["high"], score),
-                is_new_high=is_high)
+                is_new_high=is_high, game_id=GAME_ID)
             return
         try:
             key = stdscr.getch()

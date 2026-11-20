@@ -150,7 +150,7 @@ def play(stdscr, score_store):
                     ["You smashed every brick!" if st.won
                      else "Out of lives!"],
                     score=score, best=max(entry["high"], score),
-                    is_new_high=is_high)
+                    is_new_high=is_high, game_id=GAME_ID)
                 return
         try:
             stdscr.clear()

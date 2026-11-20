@@ -12,11 +12,17 @@ from gamebored.games import snake, tetris, g2048, minesweeper, tictactoe
 from gamebored.games import hangman, pong, invaders, breakout, wordle
 
 
-def test_registry_has_ten_games():
-    assert len(GAMES) == 10
+def test_registry_has_fifteen_games():
+    assert len(GAMES) == 15
     for mod in GAMES:
         for attr in ("TITLE", "DESCRIPTION", "CONTROLS", "GAME_ID", "play"):
             assert hasattr(mod, attr), "%s missing %s" % (mod, attr)
+    ids = [mod.GAME_ID for mod in GAMES]
+    assert len(set(ids)) == len(ids), "GAME_IDs must be unique"
+    from gamebored import translator as translator_mod
+    for gid in ids:
+        assert gid in translator_mod.CONVERSIONS, \
+            "no Bored Points rate for %s" % gid
 
 
 def test_scores_roundtrip(tmp_path):

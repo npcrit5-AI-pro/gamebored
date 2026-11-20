@@ -154,7 +154,7 @@ def play(stdscr, score_store):
                      if st.won else "CPU wins %d:%d. Rematch?" % (
                          st.cpu_score, st.player_score)],
                     score=score, best=max(entry["high"], score),
-                    is_new_high=is_high)
+                    is_new_high=is_high, game_id=GAME_ID)
                 return
             # decay movement so holding isn't required
             if key == -1:

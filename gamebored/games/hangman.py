@@ -5,6 +5,7 @@ import random
 
 from .. import scores as scores_mod
 from .. import ui
+from .. import words as words_mod
 
 TITLE = "Hangman"
 DESCRIPTION = "Guess the secret word"
@@ -12,7 +13,9 @@ CONTROLS = "Type letters a-z | q/Esc quit"
 GAME_ID = "hangman"
 MAX_WRONG = 6
 
-WORDS = [
+# 2,800+ common words from gamebored/data/words.txt (4-8 letters).
+# Falls back to a small built-in list if the data file is missing.
+WORDS = words_mod.load_words_upper(4, 8) or [
     "PYTHON", "ROCKET", "PIZZA", "DRAGON", "CASTLE", "ROBOT", "PLANET",
     "TIGER", "BANANA", "GUITAR", "PENGUIN", "VOLCANO", "BRIDGE", "CLOUD",
     "DESERT", "EAGLE", "FOREST", "GALAXY", "HARBOR", "ISLAND", "JUNGLE",
@@ -123,7 +126,7 @@ def play(stdscr, score_store):
                 ["You guessed it: %s!" % st.word if st.won
                  else "The word was: %s" % st.word],
                 score=score, best=max(entry["high"], score),
-                is_new_high=is_high)
+                is_new_high=is_high, game_id=GAME_ID)
             return
         try:
             key = stdscr.getch()

@@ -163,7 +163,8 @@ def play(stdscr, score_store):
                     stdscr, TITLE,
                     ["You %s!" % ("filled the board, champion" if won else "crashed"),
                      "Length: %d" % (len(st.snake))],
-                    score=st.score, best=best, is_new_high=is_high)
+                    score=st.score, best=best, is_new_high=is_high,
+                    game_id=GAME_ID)
                 return
         try:
             stdscr.clear()

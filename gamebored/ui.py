@@ -7,6 +7,8 @@ addstr/addch call is guarded against writing past the screen edge.
 
 import curses
 
+from . import translator as translator_mod
+
 MIN_H = 24
 MIN_W = 80
 
@@ -230,8 +232,13 @@ def get_key(win, delay=-1):
     return 27
 
 
-def game_over_screen(win, game_title, lines, score=None, best=None, is_new_high=False):
-    """Show a game-over panel. Returns after any keypress. Returns the key."""
+def game_over_screen(win, game_title, lines, score=None, best=None,
+                     is_new_high=False, game_id=None):
+    """Show a game-over panel. Returns after any keypress. Returns the key.
+
+    When game_id is given, score/best lines also show the translation into
+    the universal Bored Points (BP) language, e.g. 'Score: 248 -> 1,240 BP'.
+    """
     try:
         win.timeout(-1)
     except curses.error:
@@ -246,9 +253,17 @@ def game_over_screen(win, game_title, lines, score=None, best=None, is_new_high=
             box_lines.append(ln)
         if score is not None:
             box_lines.append("")
-            box_lines.append("Score: %s" % score)
+            if game_id in (translator_mod.CONVERSIONS or {}):
+                box_lines.append("Score: %s" % translator_mod.format_score(
+                    game_id, score))
+            else:
+                box_lines.append("Score: %s" % score)
         if best is not None:
-            box_lines.append("Best:  %s" % best)
+            if game_id in (translator_mod.CONVERSIONS or {}):
+                box_lines.append("Best:  %s" % translator_mod.format_score(
+                    game_id, best))
+            else:
+                box_lines.append("Best:  %s" % best)
         if is_new_high:
             box_lines.append("NEW HIGH SCORE!")
         box_lines.append("")

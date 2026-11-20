@@ -1,7 +1,8 @@
-"""Game registry: the ~10 playable games."""
+"""Game registry: the 15 playable games."""
 
-from . import breakout, g2048, hangman, invaders, minesweeper, pong, snake
-from . import tetris, tictactoe, wordle
+from . import breakout, connect4, flappy, frogger, g2048, hangman, invaders
+from . import minesweeper, pong, simon, snake, sokoban, tetris, tictactoe
+from . import wordle
 
 GAMES = [
     snake,
@@ -14,6 +15,11 @@ GAMES = [
     invaders,
     breakout,
     wordle,
+    frogger,
+    simon,
+    sokoban,
+    connect4,
+    flappy,
 ]
 
-assert len(GAMES) == 10, "GameBored ships exactly 10 games"
+assert len(GAMES) == 15, "GameBored ships exactly 15 games"

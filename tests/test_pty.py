@@ -78,6 +78,12 @@ GAME_KEYS = [
     ("8", "ad "),             # invaders: move + shoot
     ("9", "ad"),              # breakout: move paddle
     ("0", "crate\r"),         # wordle: type a word + submit
+    ("a", "\x1b[A\x1b[B\x1b[C\x1b[D"),  # frogger: hop around
+    ("b", "1234"),            # simon: repeat-ish input
+    ("c", "\x1b[A\x1b[B\x1b[C\x1b[D"),  # sokoban: push around
+    ("d", "4"),               # connect4: drop in column 4
+    ("e", "   "),             # flappy: flap a few times
+    ("h", ""),                # high scores table
 ]
 
 
@@ -106,6 +112,27 @@ def test_menu_navigation_and_quit():
         child.send("\r")  # enter launches snake (selected=0)
         time.sleep(1.5)
         quit_to_menu(child)
+    finally:
+        close(child)
+
+
+def test_translator_converts_and_returns():
+    child = spawn()
+    try:
+        expect_menu(child)
+        child.send("t")  # open the Score Translator
+        time.sleep(1.0)
+        child.expect(re.compile(r"SCORE TRANSLATOR", re.S), timeout=5)
+        child.send("1")  # pick Snake
+        time.sleep(1.0)
+        child.expect(re.compile(r"raw score", re.S), timeout=5)
+        child.send("100\r")  # raw number + Enter converts
+        time.sleep(1.0)
+        child.expect(re.compile(r"10,000 BP", re.S), timeout=5)
+        child.send("q")  # back to game picker (no Enter: it re-selects)
+        time.sleep(0.8)
+        child.send("q")  # back to the menu
+        expect_menu(child)
     finally:
         close(child)
 

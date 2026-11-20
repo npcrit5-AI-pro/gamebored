@@ -205,7 +205,7 @@ def play(stdscr, score_store):
                     ["The stack reached the top!",
                      "Lines cleared: %d" % st.lines],
                     score=st.score, best=max(entry["high"], st.score),
-                    is_new_high=is_high)
+                    is_new_high=is_high, game_id=GAME_ID)
                 return
         try:
             stdscr.clear()

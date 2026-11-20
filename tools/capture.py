@@ -134,6 +134,40 @@ def build_states():
     wordle.draw(scr, wd)
     states["wordle"] = scr.text()
 
+    from gamebored.games import connect4, flappy, frogger, simon, sokoban
+
+    fr = frogger.new_state(seed=7)
+    fr.move(0, -1)
+    fr.step()
+    scr = FakeScreen()
+    frogger.draw(scr, fr)
+    states["frogger"] = scr.text()
+
+    sm = simon.new_state(seed=3)
+    scr = FakeScreen()
+    simon.draw(scr, sm, highlight=sm.seq[0])
+    states["simon"] = scr.text()
+
+    sk = sokoban.new_state(1)
+    sk.move(0, 1)
+    scr = FakeScreen()
+    sokoban.draw(scr, sk, sk.score)
+    states["sokoban"] = scr.text()
+
+    c4 = connect4.new_state(seed=1)
+    c4.drop(3, "X")
+    c4.ai_move()
+    scr = FakeScreen()
+    connect4.draw(scr, c4)
+    states["connect4"] = scr.text()
+
+    fl = flappy.new_state(seed=2)
+    for _ in range(6):
+        fl.step(flap=(fl.vy > 0.5))
+    scr = FakeScreen()
+    flappy.draw(scr, fl)
+    states["flappy"] = scr.text()
+
     return states
 
 

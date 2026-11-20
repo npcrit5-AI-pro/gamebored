@@ -181,7 +181,7 @@ def play(stdscr, score_store):
                 ["You cleared every mine! Time: %ds" % int(st.elapsed)
                  if st.won else "BOOM! You hit a mine."],
                 score=score, best=max(entry["high"], score),
-                is_new_high=is_high)
+                is_new_high=is_high, game_id=GAME_ID)
             return
         try:
             key = stdscr.getch()
