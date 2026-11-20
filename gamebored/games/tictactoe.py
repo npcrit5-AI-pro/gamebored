@@ -170,7 +170,7 @@ def play(stdscr, score_store):
             ui.game_over_screen(
                 stdscr, TITLE, [_end_message(w)],
                 score=score, best=max(entry["high"], score),
-                is_new_high=is_high)
+                is_new_high=is_high, game_id=GAME_ID)
             return
         try:
             key = stdscr.getch()
