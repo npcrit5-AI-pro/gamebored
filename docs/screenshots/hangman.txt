@@ -1,0 +1,15 @@
+
+                                    HANGMAN
+
+                                       O
+
+
+
+                                     +---+
+
+
+
+                                  P Y _ _ _ _
+
+                                 Guessed: P Y Z
+                                   Wrong: 1/6
