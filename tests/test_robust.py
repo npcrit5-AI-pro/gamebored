@@ -169,3 +169,41 @@ def test_round12_frogger_tiny_dimensions_clamped():
         assert st.step() is True
     st = frogger.new_state(seed=1)
     assert st.step() is True
+
+
+def test_round13_wondering_detail_scroll_clamps():
+    import curses
+    from gamebored import wondering as wondering_mod
+
+    class FakeWin:
+        def __init__(self, keys):
+            self.keys = list(keys)
+            self.added = []
+
+        def getmaxyx(self):
+            return (24, 80)
+
+        def clear(self):
+            pass
+
+        def refresh(self):
+            pass
+
+        def timeout(self, delay):
+            pass
+
+        def addstr(self, y, x, text, attr=0):
+            self.added.append((y, x, text))
+
+        def getch(self):
+            if self.keys:
+                return self.keys.pop(0)
+            return ord("x")
+
+    result = {"title": "T", "source": "wikipedia",
+              "snippet": "short", "url": "https://example.com"}
+    win = FakeWin([curses.KEY_DOWN] * 50 + [curses.KEY_UP] * 50)
+    wondering_mod.show_detail(win, result)
+    assert win.added
+    lines = wondering_mod._detail_lines(result, 80)
+    assert len(lines) <= max(1, 24 - 5) + 1
