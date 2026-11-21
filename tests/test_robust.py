@@ -128,3 +128,20 @@ def test_round9_safe_draw_helpers_tolerate_junk():
     ui_mod.safe_addch(win, 0, 0, None)
     ui_mod.safe_addch(win, 0, 0, ord("X"))
     assert win.calls  # at least the coercible ones landed
+
+
+def test_round10_search_helpers_tolerate_junk():
+    from gamebored import search as search_mod
+    assert search_mod.merge_results(None) == []
+    assert search_mod.merge_results({"wikipedia": "junk"}) == []
+    merged = search_mod.merge_results({
+        "wikipedia": [None, "x", {},
+                      {"title": "T", "url": "https://example.com/a"},
+                      {"title": 123, "url": 456},
+                      {"title": "T", "url": "https://example.com/a"}],
+    })
+    assert len(merged) == 2
+    assert search_mod._clean(12345) == "12345"
+    assert search_mod._clean(None) == ""
+    res, errs = search_mod.search_all("", timeout=1)
+    assert res == [] and errs == {}
