@@ -1010,3 +1010,12 @@ def test_round60_sokoban_solved_toast():
     src = inspect.getsource(sokoban.play)
     assert "solved_until = time.time() + 1.2" in src
     assert src.count("SOLVED!") >= 2  # endless + room labels
+
+
+def test_round61_runner_footer_score_is_total():
+    """Round 61: footer says 'score N' (it persists across rooms)."""
+    import inspect
+    from gamebored.games import platformer
+    src = inspect.getsource(platformer.play)
+    assert '" | score %d" % st.score' in src
+    assert "room score" not in src

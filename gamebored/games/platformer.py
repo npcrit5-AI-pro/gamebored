@@ -877,7 +877,7 @@ def play(stdscr, score_store):
                 if time.time() < clear_until else ""
             draw(stdscr, st, room_label(level_idx, total, st) + ouch +
                  clear)
-        ui.game_footer(stdscr, CONTROLS + " | room score %d" % st.score)
+        ui.game_footer(stdscr, CONTROLS + " | score %d" % st.score)
         try:
             stdscr.refresh()
         except curses.error:
