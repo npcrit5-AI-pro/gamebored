@@ -238,3 +238,13 @@ def test_round14_high_scores_scroll_clamps():
     extras_mod.show_high_scores(win, {})
     win2 = FakeWin([curses.KEY_UP] * 5)
     extras_mod.show_high_scores(win2, {"snake": {"high": 9, "plays": 2}})
+
+
+def test_round15_word_loader_ignores_garbage_lines(tmp_path):
+    from gamebored import words as words_mod
+    path = tmp_path / "words.txt"
+    path.write_text("apple\n\nAVOCADO\ndon't\nx\n" + "z" * 500 + "\n  \n123\n",
+                    encoding="utf-8")
+    words = words_mod._read_word_file(str(path))
+    assert words == ["apple", "avocado", "x"], words
+    assert words_mod._read_word_file(str(tmp_path / "missing.txt")) == []
