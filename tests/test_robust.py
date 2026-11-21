@@ -503,6 +503,46 @@ def test_round36_runner_ignores_junk_input():
         ("dead", "won", "over", None)
 
 
+def test_round37_room_pickers_survive_key_mashing():
+    import curses
+    from gamebored.games import sokoban, platformer
+
+    class FakeWin:
+        def __init__(self, keys):
+            self.keys = list(keys)
+
+        def getmaxyx(self):
+            return (24, 80)
+
+        def clear(self):
+            pass
+
+        def refresh(self):
+            pass
+
+        def addstr(self, y, x, text, attr=0):
+            pass
+
+        def getch(self):
+            return self.keys.pop(0) if self.keys else ord("q")
+
+    mash = ([curses.KEY_DOWN] * 300 + [curses.KEY_UP] * 300
+            + [ord("e"), 10])
+    for progress in ({}, {"sokoban": "junk"}, {"platformer": {"unlocked":
+                                                              "abc"}},
+                     {"sokoban": {"unlocked": 204,
+                                  "completed_all": True}},
+                     {"platformer": {"unlocked": 59,
+                                     "completed_all": True}}):
+        sokoban.select_level(FakeWin(mash), {}, progress)
+        platformer.select_level(FakeWin(mash), {}, progress)
+    # locked endless cannot be chosen without completing everything
+    assert platformer.select_level(
+        FakeWin([ord("e")]), {}, {}) is None
+    assert sokoban.select_level(
+        FakeWin([10]), {}, {}) == ("level", 0)
+
+
 def test_round29_game_over_returns_on_any_key():
     import curses
     from gamebored import ui as ui_mod
