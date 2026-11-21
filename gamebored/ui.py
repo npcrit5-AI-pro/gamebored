@@ -72,6 +72,11 @@ def color(num):
 
 def safe_addstr(win, y, x, text, attr=0):
     try:
+        if not isinstance(text, str):
+            try:
+                text = str(text)
+            except Exception:
+                return
         h, w = win.getmaxyx()
         if y < 0 or y >= h or x >= w:
             return
@@ -85,19 +90,27 @@ def safe_addstr(win, y, x, text, attr=0):
         if not text:
             return
         win.addstr(y, x, text, attr)
-    except curses.error:
+    except (curses.error, TypeError, ValueError, OverflowError):
         pass
 
 
 def safe_addch(win, y, x, ch, attr=0):
     try:
+        if isinstance(ch, str):
+            if len(ch) != 1:
+                return
+        elif isinstance(ch, int):
+            if not 0 <= ch <= 255:
+                return
+        else:
+            return
         h, w = win.getmaxyx()
         if y < 0 or y >= h or x < 0 or x >= w:
             return
         if y == h - 1 and x == w - 1:
             return
         win.addch(y, x, ch, attr)
-    except curses.error:
+    except (curses.error, TypeError, ValueError, OverflowError):
         pass
 
 

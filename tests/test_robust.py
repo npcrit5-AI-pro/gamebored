@@ -96,3 +96,35 @@ def test_round8_sokoban_bad_level_clamps():
         assert 0 <= st.level < len(sokoban.LEVELS)
         assert st.move(1, 0) in (True, False)
     assert sokoban.new_state(99).level == len(sokoban.LEVELS) - 1
+
+
+def test_round9_safe_draw_helpers_tolerate_junk():
+    from gamebored import ui as ui_mod
+
+    class FakeWin:
+        def __init__(self):
+            self.calls = []
+
+        def getmaxyx(self):
+            return (24, 80)
+
+        def addstr(self, y, x, text, attr=0):
+            if not isinstance(text, str):
+                raise TypeError("nope")
+            self.calls.append((y, x, text))
+
+        def addch(self, y, x, ch, attr=0):
+            if isinstance(ch, int) and not 0 <= ch <= 255:
+                raise ValueError("nope")
+            self.calls.append((y, x, ch))
+
+    win = FakeWin()
+    ui_mod.safe_addstr(win, 0, 0, 12345)
+    ui_mod.safe_addstr(win, 0, 0, None)
+    ui_mod.safe_addstr(win, -5, 0, "ok")
+    ui_mod.safe_addstr(win, 0, 999, "ok")
+    ui_mod.safe_addch(win, 0, 0, "toolong")
+    ui_mod.safe_addch(win, 0, 0, 99999)
+    ui_mod.safe_addch(win, 0, 0, None)
+    ui_mod.safe_addch(win, 0, 0, ord("X"))
+    assert win.calls  # at least the coercible ones landed
