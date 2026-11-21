@@ -645,6 +645,38 @@ def test_round45_every_game_advertises_pause_help_menu():
         assert "q" in controls and "menu" in controls, mod.GAME_ID
 
 
+def test_round46_picker_shows_best_moves():
+    from gamebored.games import sokoban
+
+    class FakeWin:
+        def __init__(self):
+            self.lines = []
+
+        def getmaxyx(self):
+            return (24, 80)
+
+        def clear(self):
+            pass
+
+        def refresh(self):
+            pass
+
+        def addstr(self, y, x, text, attr=0):
+            self.lines.append(text)
+
+        def getch(self):
+            return 10
+
+    progress = {"sokoban": {"unlocked": 5,
+                            "best": {"0": 7, "2": 31}}}
+    assert sokoban.select_level(FakeWin(), {}, progress) == ("level", 5)
+    win = FakeWin()
+    sokoban.select_level(win, {}, progress)
+    assert any("room   1 (best 7)" in ln for ln in win.lines), win.lines
+    assert any("room   3 (best 31)" in ln for ln in win.lines)
+    assert any("[locked]" in ln for ln in win.lines)
+
+
 def test_round37_room_pickers_survive_key_mashing():
     import curses
     from gamebored.games import sokoban, platformer

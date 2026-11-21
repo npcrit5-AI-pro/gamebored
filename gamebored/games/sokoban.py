@@ -294,8 +294,13 @@ def select_level(stdscr, score_store, progress):
             for i in range(start, min(total + 1, start + visible)):
                 if i < total:
                     locked = i > unlocked
-                    line = "room %3d%s" % (i + 1,
-                                           " [locked]" if locked else "")
+                    if locked:
+                        line = "room %3d [locked]" % (i + 1,)
+                    else:
+                        best = progress_mod.get_best(progress, GAME_ID, i)
+                        line = "room %3d%s" % (
+                            i + 1,
+                            " (best %d)" % best if best else "")
                 else:
                     locked = not endless_ok
                     line = "endless mode%s" % (
