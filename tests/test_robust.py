@@ -306,3 +306,16 @@ def test_round21_menu_subtitle_tracks_package_version():
     from gamebored import __version__, app as app_mod
     assert __version__ in app_mod.SUBTITLE
     assert "1.2.0" not in app_mod.SUBTITLE or __version__ == "1.2.0"
+
+
+def test_round22_cli_flags_do_not_launch_curses(capsys):
+    from gamebored import __main__ as main_mod
+    assert main_mod.main(["--help"]) == 0
+    assert main_mod.main(["-h"]) == 0
+    assert main_mod.main(["--version"]) == 0
+    out = capsys.readouterr().out
+    assert "GameBored" in out
+    assert main_mod.main(["--list"]) == 0
+    assert "Snake" in capsys.readouterr().out
+    assert main_mod.main(["--bogus"]) == 2
+    assert "Usage" in capsys.readouterr().out
