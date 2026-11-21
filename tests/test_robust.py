@@ -1019,3 +1019,21 @@ def test_round61_runner_footer_score_is_total():
     src = inspect.getsource(platformer.play)
     assert '" | score %d" % st.score' in src
     assert "room score" not in src
+
+
+def test_round62_all_games_name_pause_overlay():
+    """Round 62: every game calls pause_overlay(stdscr, TITLE)."""
+    import inspect
+    import pkgutil
+    from gamebored import games as _games
+    checked = 0
+    for info in pkgutil.iter_modules(_games.__path__):
+        if info.name.endswith(("_data", "_solver")):
+            continue
+        mod = __import__("gamebored.games." + info.name, fromlist=["x"])
+        if not (hasattr(mod, "play") and hasattr(mod, "TITLE")):
+            continue
+        src = inspect.getsource(mod.play)
+        assert "pause_overlay(stdscr, TITLE)" in src, info.name
+        checked += 1
+    assert checked == 16, checked
