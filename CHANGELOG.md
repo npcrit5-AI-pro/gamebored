@@ -135,7 +135,14 @@ including Runner.
 - Round 60: Sokoban flashes `SOLVED!` for 1.2s on room clear (level and
   endless modes), mirroring Runner.
 
-Final: version stays 1.4.0, full suite green (147 passed), a manual
+- Round 61: Runner footer says `score N`, not `room score N` — the
+  score persists across rooms.
+- Round 62: guard test proves all sixteen games call
+  `pause_overlay(stdscr, TITLE)` so the pause screen always names the game.
+- Round 63: `uninstall.sh` backs up `progress.json` and `install.sh`
+  restores it — reinstalling no longer wipes unlocked rooms or bests.
+
+Final: version stays 1.4.0, full suite green (149 passed), a manual
 `install.sh`/`uninstall.sh` round-trip verified with a scratch HOME, and
 `python3 -m gamebored --list` shows 16 games including Runner.
 
