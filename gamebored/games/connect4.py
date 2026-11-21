@@ -32,10 +32,16 @@ class ConnectState:
         self.winner_mark = None
 
     def cell(self, r, c):
+        if not isinstance(r, int) or not isinstance(c, int):
+            return ""
+        if not 0 <= r < ROWS or not 0 <= c < COLS:
+            return ""
         return self.board[r * COLS + c]
 
     def drop(self, col, mark):
         """Drop mark into col; returns the row or None if full/invalid."""
+        if not isinstance(col, int):
+            return None
         if not 0 <= col < COLS:
             return None
         for r in range(ROWS - 1, -1, -1):

@@ -145,3 +145,17 @@ def test_round10_search_helpers_tolerate_junk():
     assert search_mod._clean(None) == ""
     res, errs = search_mod.search_all("", timeout=1)
     assert res == [] and errs == {}
+
+
+def test_round11_connect4_rejects_bad_columns():
+    from gamebored.games import connect4
+    st = connect4.ConnectState(seed=0)
+    for bad in (99, -1, None, "x", 2.5):
+        assert st.drop(bad, "X") is None
+    assert st.cell(99, 99) == ""
+    assert st.cell("r", "c") == ""
+    assert st.drop(3, "X") is not None
+    # full column refuses more discs
+    for _ in range(connect4.ROWS + 2):
+        st.drop(0, "X")
+    assert st.drop(0, "X") is None
