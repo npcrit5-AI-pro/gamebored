@@ -389,6 +389,39 @@ def test_round30_menu_loop_survives_empty_registry(monkeypatch):
     app_mod.menu_loop(FakeWin())  # must return, not raise
 
 
+def test_round33_every_draw_survives_odd_sizes():
+    import sys
+    sys.path.insert(0, os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        "tools"))
+    from capture import FakeScreen
+    from gamebored.games import (snake, tetris, g2048, minesweeper, tictactoe,
+                                 hangman, pong, invaders, breakout, wordle,
+                                 frogger, simon, sokoban, connect4, flappy)
+    cases = [
+        lambda s: snake.draw(s, snake.SnakeState(20, 14, seed=7)),
+        lambda s: tetris.draw(s, tetris.TetrisState(seed=1)),
+        lambda s: g2048.draw(s, g2048.State2048(seed=1)),
+        lambda s: minesweeper.draw(s, minesweeper.MineState(seed=9), (0, 0)),
+        lambda s: tictactoe.draw(s, tictactoe.TicState()),
+        lambda s: hangman.draw(s, hangman.HangState(word="PYTHON")),
+        lambda s: pong.draw(s, pong.PongState(width=60, height=18), 10, 3),
+        lambda s: invaders.draw(s, invaders.InvaderState(50, 16, seed=2),
+                                15, 4),
+        lambda s: breakout.draw(s, breakout.BreakState(50, 16), 15, 4),
+        lambda s: wordle.draw(s, wordle.WordleState(answer="CRANE")),
+        lambda s: frogger.draw(s, frogger.new_state(seed=7)),
+        lambda s: simon.draw(s, simon.new_state(seed=3)),
+        lambda s: sokoban.draw(s, sokoban.new_state(1), 0),
+        lambda s: connect4.draw(s, connect4.new_state(seed=1)),
+        lambda s: flappy.draw(s, flappy.new_state(seed=2)),
+    ]
+    assert len(cases) == 15
+    for draw in cases:
+        for w, h in ((80, 24), (79, 23), (40, 10), (20, 6), (200, 60)):
+            draw(FakeScreen(h, w))  # must not raise
+
+
 def test_round29_game_over_returns_on_any_key():
     import curses
     from gamebored import ui as ui_mod
