@@ -82,14 +82,37 @@ def _commas(n):
     return s + out
 
 
-def draw_menu(win, selected, score_store, entries=None):
+def _apply_filter(entries, query):
+    """Entries matching the filter query (title/desc/hotkey/category)."""
+    q = (query or "").strip().lower()
+    if not q:
+        return list(entries or [])
+    out = []
+    for entry in entries or []:
+        try:
+            hay = "%s %s %s %s" % (entry.get("title", ""),
+                                   entry.get("desc", ""),
+                                   entry.get("hotkey", ""),
+                                   entry.get("category", ""))
+        except Exception:
+            continue
+        if q in hay.lower():
+            out.append(entry)
+    return out
+
+
+def draw_menu(win, selected, score_store, entries=None, status=None):
     if entries is None:
         entries = build_entries()
     if not entries:
         try:
             win.clear()
+            h, w = win.getmaxyx()
             ui.centered(win, 0, "GAMEBORED", ui.color(1) | curses.A_BOLD)
             ui.centered(win, 2, "No entries to show.", ui.color(7))
+            if status:
+                ui.centered(win, h - 2, status[: w - 2],
+                            ui.color(3) | curses.A_BOLD)
             ui.footer(win, "q quit")
             win.refresh()
         except curses.error:
@@ -167,8 +190,11 @@ def draw_menu(win, selected, score_store, entries=None):
         entry = entries[selected % len(entries)]
         detail = "%s: %s" % (entry["title"], entry["controls"])
         ui.centered(win, h - 2, detail[: w - 2], ui.color(7))
+    if status and h - 2 >= 0:
+        ui.centered(win, h - 2, status[: w - 2],
+                    ui.color(3) | curses.A_BOLD)
     ui.footer(win, "Up/Down+j/k move | Enter open | 1-9,0,a-f games | "
-                   "W search H scores T translator ? help | q quit")
+                   "W search H scores T translator ? help | / filter | q quit")
     try:
         win.refresh()
     except curses.error:
@@ -259,6 +285,7 @@ def menu_loop(stdscr):
             pass
         return
     selected = _restore_selected(score_store, entries)
+    filtering, query = False, ""
     while True:
         if ui.too_small(stdscr):
             ui.show_too_small(stdscr)
@@ -271,13 +298,53 @@ def menu_loop(stdscr):
             elif key == curses.KEY_RESIZE:
                 continue
             continue
-        draw_menu(stdscr, selected, score_store, entries)
+        shown = _apply_filter(entries, query) if filtering else entries
+        status = None
+        if filtering:
+            status = "Filter: %s_ (%d match%s) | Enter open | Esc clear" % (
+                query, len(shown), "" if len(shown) == 1 else "es")
+        draw_menu(stdscr, selected, score_store, shown, status=status)
         try:
             key = stdscr.getch()
         except curses.error:
             key = -1
         if key in ui.QUIT_KEYS:
+            if filtering:
+                filtering, query = False, ""
+                selected = _restore_selected(score_store, entries)
+                continue
             return
+        if filtering:
+            if key == curses.KEY_RESIZE:
+                continue
+            elif key in (10, 13, curses.KEY_ENTER):
+                if shown:
+                    target = shown[selected % len(shown)]
+                    idx = entries.index(target)
+                    _remember_selected(score_store, entries, idx)
+                    launch_entry(stdscr, target, score_store)
+                    _hide_cursor(stdscr)
+                    score_store = scores_mod.load()
+                    entries = build_entries()
+                filtering, query = False, ""
+                selected = _restore_selected(score_store, entries)
+            elif key == curses.KEY_UP:
+                if shown:
+                    selected = (selected - 1) % len(shown)
+            elif key == curses.KEY_DOWN:
+                if shown:
+                    selected = (selected + 1) % len(shown)
+            elif key in (curses.KEY_BACKSPACE, 127, 8):
+                query = query[:-1]
+                selected = 0
+            elif 32 <= key <= 126 and len(query) < 24:
+                query += chr(key)
+                selected = 0
+            continue
+        if key == ord("/"):
+            filtering, query = True, ""
+            selected = 0
+            continue
         elif key == curses.KEY_UP or key == ord("k"):
             selected = (selected - 1) % len(entries)
         elif key == curses.KEY_DOWN or key == ord("j"):

@@ -566,6 +566,60 @@ def test_round42_menu_remembers_last_pick(tmp_path):
     assert app_mod._restore_selected(reloaded, entries) == target
 
 
+def test_round43_menu_filter_narrows_and_opens():
+    import curses
+    from gamebored import app as app_mod
+    entries = app_mod.build_entries()
+    assert app_mod._apply_filter(entries, "") == entries
+    assert app_mod._apply_filter(entries, "   ") == entries
+    hits = app_mod._apply_filter(entries, "sok")
+    assert hits and all("sok" in (e["title"] + e["desc"]).lower()
+                        for e in hits)
+    assert app_mod._apply_filter(entries, "zzz-no-such-game") == []
+    assert app_mod._apply_filter(entries, "F")  # hotkey match
+    assert app_mod._apply_filter(None, "x") == []
+
+    class FakeWin:
+        def __init__(self, keys):
+            self.keys = list(keys)
+            self.status_seen = []
+
+        def getmaxyx(self):
+            return (24, 80)
+
+        def clear(self):
+            pass
+
+        def refresh(self):
+            pass
+
+        def keypad(self, flag):
+            pass
+
+        def timeout(self, delay):
+            pass
+
+        def addstr(self, y, x, text, attr=0):
+            if isinstance(text, str) and text.startswith("Filter:"):
+                self.status_seen.append(text)
+
+        def addch(self, y, x, ch, attr=0):
+            pass
+
+        def getch(self):
+            return self.keys.pop(0) if self.keys else ord("q")
+
+    # type a filter, back it out, quit: never launches anything
+    win = FakeWin([ord("/"), ord("s"), ord("o"), ord("k"),
+                   curses.KEY_BACKSPACE, 27, ord("q")])
+    app_mod.menu_loop(win)
+    assert any("sok" in s.lower() for s in win.status_seen)
+    # filter with no matches shows the empty message, Esc exits
+    win2 = FakeWin([ord("/"), ord("z"), ord("z"), ord("z"), 27, ord("q")])
+    app_mod.menu_loop(win2)
+    assert any("(0 match" in s for s in win2.status_seen)
+
+
 def test_round37_room_pickers_survive_key_mashing():
     import curses
     from gamebored.games import sokoban, platformer
