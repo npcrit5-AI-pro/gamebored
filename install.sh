@@ -7,6 +7,17 @@ SRC_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DEST="$HOME/.local/share/gamebored"
 BIN_DIR="$HOME/.local/bin"
 
+# Preflight: stock python3 with curses is all GameBored needs.
+if ! command -v python3 >/dev/null 2>&1; then
+  echo "Error: python3 not found. Install it first (e.g. sudo dnf install python3)." >&2
+  exit 1
+fi
+if ! python3 -c "import sys, curses; sys.exit(0 if sys.version_info >= (3, 8) else 1)" 2>/dev/null; then
+  echo "Error: GameBored needs python3 >= 3.8 with curses support." >&2
+  python3 --version 2>&1 || true
+  exit 1
+fi
+
 echo "Installing GameBored..."
 
 mkdir -p "$DEST" "$BIN_DIR"
