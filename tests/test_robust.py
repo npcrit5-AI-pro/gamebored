@@ -95,7 +95,9 @@ def test_round8_sokoban_bad_level_clamps():
         st = sokoban.SokState(level=bad)
         assert 0 <= st.level < len(sokoban.LEVELS)
         assert st.move(1, 0) in (True, False)
-    assert sokoban.new_state(99).level == len(sokoban.LEVELS) - 1
+    assert len(sokoban.LEVELS) == 205  # v1.3.0's full room set is intact
+    assert sokoban.new_state(9999).level == len(sokoban.LEVELS) - 1
+    assert sokoban.new_state(-5).level == 0
 
 
 def test_round9_safe_draw_helpers_tolerate_junk():
@@ -397,7 +399,8 @@ def test_round33_every_draw_survives_odd_sizes():
     from capture import FakeScreen
     from gamebored.games import (snake, tetris, g2048, minesweeper, tictactoe,
                                  hangman, pong, invaders, breakout, wordle,
-                                 frogger, simon, sokoban, connect4, flappy)
+                                 frogger, simon, sokoban, connect4, flappy,
+                                 platformer)
     cases = [
         lambda s: snake.draw(s, snake.SnakeState(20, 14, seed=7)),
         lambda s: tetris.draw(s, tetris.TetrisState(seed=1)),
@@ -415,8 +418,12 @@ def test_round33_every_draw_survives_odd_sizes():
         lambda s: sokoban.draw(s, sokoban.new_state(1), 0),
         lambda s: connect4.draw(s, connect4.new_state(seed=1)),
         lambda s: flappy.draw(s, flappy.new_state(seed=2)),
+        lambda s: platformer.draw(
+            s, platformer.RunState(platformer.LEVELS[12]),
+            platformer.room_label(12, len(platformer.LEVELS),
+                                  platformer.RunState(platformer.LEVELS[12]))),
     ]
-    assert len(cases) == 15
+    assert len(cases) == 16
     for draw in cases:
         for w, h in ((80, 24), (79, 23), (40, 10), (20, 6), (200, 60)):
             draw(FakeScreen(h, w))  # must not raise
@@ -429,9 +436,71 @@ def test_round34_capture_renders_every_screen(tmp_path):
         "tools"))
     from capture import build_states
     states = build_states()
-    assert len(states) == 15 + 3, sorted(states)
+    assert len(states) == 16 + 3, sorted(states)
     for name, text in states.items():
         assert isinstance(text, str) and text.strip(), name
+
+
+def test_round35_corrupt_progress_json_never_crashes(tmp_path):
+    import json
+    from gamebored import progress as progress_mod
+    path = str(tmp_path / "progress.json")
+    # missing file -> empty progress, level 0 unlocked, endless locked
+    assert progress_mod.load(path) == {}
+    assert progress_mod.get_unlocked({}, "sokoban", 205) == 0
+    assert not progress_mod.endless_unlocked({}, "sokoban", 205)
+    # corrupt file shapes -> empty, never raise
+    for bad in ('not json{{{', '[1, 2]', '"str"', 'null'):
+        with open(path, "w") as fh:
+            fh.write(bad)
+        assert progress_mod.load(path) == {}, bad
+    # valid JSON with junk values loads but reads as locked/zero
+    for bad in ('{"sokoban": "junk"}',
+                '{"sokoban": {"unlocked": "abc"}}',
+                '{"platformer": [1]}'):
+        with open(path, "w") as fh:
+            fh.write(bad)
+        store = progress_mod.load(path)
+        assert progress_mod.get_unlocked(store, "sokoban", 205) == 0
+        assert not progress_mod.endless_unlocked(store, "sokoban", 205)
+    # non-dict stores and junk levels never raise
+    for bad_store in (["x"], "str", None, 42,
+                      {"sokoban": [1]}, {"platformer": None}):
+        assert progress_mod.get_unlocked(bad_store, "sokoban", 205) == 0
+        assert not progress_mod.endless_unlocked(bad_store, "sokoban", 205)
+    for bad_level in ("x", None, [1], -5):
+        nxt = progress_mod.record_level_complete({}, "sokoban", bad_level,
+                                                 205, path=path)
+        # junk coerces to level <= 0: can never skip ahead, never raises
+        assert nxt <= 1, bad_level
+    # normal flow still unlocks and persists
+    store = {}
+    assert progress_mod.record_level_complete(store, "sokoban", 0, 205,
+                                              path=path) == 1
+    assert json.load(open(path))["sokoban"]["unlocked"] == 1
+    # atomic save: junk never corrupts the file on disk
+    progress_mod.save({"sokoban": object()}, path=path)
+    assert json.load(open(path))["sokoban"]["unlocked"] == 1
+    assert not os.path.exists(path + ".tmp")
+
+
+def test_round36_runner_ignores_junk_input():
+    from gamebored.games import platformer
+    assert len(platformer.LEVELS) == 60  # v1.3.0's 60 rooms are intact
+    st = platformer.RunState(platformer.LEVELS[0])
+    for bad_dt in ("x", None, [1], float("nan"), float("inf")):
+        st.step(bad_dt)  # must not raise
+    for bad_move in ("x", None, [1], float("nan")):
+        st.step(0.09, move=bad_move)  # must not raise
+    for bad_rows in (None, 42):
+        st2 = platformer.RunState(bad_rows)
+        st2.step(0.09, move=1)
+    assert platformer.new_state(level=9999).step(0.09) in \
+        ("dead", "won", "over", None)
+    assert platformer.new_state(level=-5).step(0.09) in \
+        ("dead", "won", "over", None)
+    assert platformer.new_state(level="x").step(0.09) in \
+        ("dead", "won", "over", None)
 
 
 def test_round29_game_over_returns_on_any_key():

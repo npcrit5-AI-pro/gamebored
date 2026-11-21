@@ -367,6 +367,8 @@ def gen_endless_verified(seed, n, tries=25):
 
 class RunState:
     def __init__(self, rows, score=0, endless=None):
+        if not isinstance(rows, (list, tuple)) or not rows:
+            rows = LEVELS[0] if LEVELS else ("#####", "#P X#", "#####")
         self.lv = parse_level(rows)
         self.score = score
         self.endless = endless  # (seed, n) or None
@@ -442,6 +444,20 @@ class RunState:
         """Advance physics by dt seconds. Returns 'dead'/'won'/None."""
         if self.over:
             return "over"
+        try:
+            dt = float(dt)
+        except (TypeError, ValueError):
+            dt = 0.0
+        if dt != dt or dt == float("inf") or dt == float("-inf"):
+            dt = 0.0
+        dt = max(0.0, min(dt, 1.0))
+        try:
+            move = float(move)
+        except (TypeError, ValueError):
+            move = 0.0
+        if move != move:  # NaN input drifts nowhere
+            move = 0.0
+        move = max(-1.0, min(move, 1.0))
         self.tick += 1
         s = self.solids()
         # moving platform carry
@@ -555,6 +571,11 @@ def new_state(level=0, score=0, endless=None, seed=None, endless_n=None):
     if endless is not None:
         rows, _ = gen_endless_verified(endless, endless_n or 1)
         return RunState(rows, score=score, endless=(endless, endless_n or 1))
+    try:
+        level = int(level)
+    except (TypeError, ValueError):
+        level = 0
+    level = max(0, min(level, len(LEVELS) - 1)) if LEVELS else 0
     rows = LEVELS[level]
     return RunState(rows, score=score)
 
