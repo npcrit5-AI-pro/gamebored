@@ -1001,3 +1001,12 @@ def test_round59_runner_clear_toast_uses_room_bonus():
     src = inspect.getsource(platformer.play)
     assert "clear_until = time.time() + 1.2" in src
     assert '" CLEAR! +%d" % ROOM_BONUS' in src
+
+
+def test_round60_sokoban_solved_toast():
+    """Round 60: Sokoban flashes SOLVED! for ~1.2s after clearing a room."""
+    import inspect
+    from gamebored.games import sokoban
+    src = inspect.getsource(sokoban.play)
+    assert "solved_until = time.time() + 1.2" in src
+    assert src.count("SOLVED!") >= 2  # endless + room labels

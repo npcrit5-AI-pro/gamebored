@@ -12,6 +12,7 @@ Only the standard library is used.
 
 import curses
 import random
+import time
 
 from .. import progress as progress_mod
 from .. import scores as scores_mod
@@ -377,6 +378,7 @@ def play(stdscr, score_store):
     room_best = (None if kind == "endless" else
                  progress_mod.get_best(progress_mod.load(), GAME_ID,
                                        level_idx))
+    solved_until = 0.0  # timestamp until "SOLVED!" shows
     while True:
         if ui.too_small(stdscr):
             ui.show_too_small(stdscr)
@@ -393,14 +395,16 @@ def play(stdscr, score_store):
             pass
         if kind == "endless":
             draw(stdscr, st, total_score,
-                 label="Generated level %d seed:%s moves:%d score:%d" % (
-                     n, seed, st.moves, total_score))
+                 label="Generated level %d seed:%s moves:%d score:%d%s" % (
+                     n, seed, st.moves, total_score,
+                     " SOLVED!" if time.time() < solved_until else ""))
         else:
             best_txt = str(room_best) if room_best else "-"
             draw(stdscr, st, total_score,
-                 label="SOKOBAN room:%d/%d moves:%d best:%s score:%d" % (
+                 label="SOKOBAN room:%d/%d moves:%d best:%s score:%d%s" % (
                      st.level + 1, len(LEVELS), st.moves, best_txt,
-                     total_score))
+                     total_score,
+                     " SOLVED!" if time.time() < solved_until else ""))
         ui.game_footer(stdscr, CONTROLS + " | boxes home %d/%d" % (
             st.boxes_home, len(st.boxes)))
         try:
@@ -414,6 +418,7 @@ def play(stdscr, score_store):
                 st = SokState(rows=gen_endless_verified(seed, n),
                               endless=(seed, n))
                 st.score = 0
+                solved_until = time.time() + 1.2
                 continue
             progress = progress_mod.load()
             room_best = progress_mod.record_best(progress, GAME_ID,
@@ -432,6 +437,7 @@ def play(stdscr, score_store):
             st = SokState(level_idx)
             st.score = 0
             room_best = progress_mod.get_best(progress, GAME_ID, level_idx)
+            solved_until = time.time() + 1.2
             continue
         try:
             key = stdscr.getch()
