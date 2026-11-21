@@ -14,6 +14,7 @@ from . import scores as scores_mod
 from . import translator as translator_mod
 from . import ui
 from . import wondering as wondering_mod
+from . import __version__ as _pkg_version
 from .games import GAMES
 
 LOGO = [
@@ -22,7 +23,7 @@ LOGO = [
     " \\____|\\__,_|_| |_| |_|\\___|  |___/ \\___/|_| \\___|\\___|\\__,_|",
 ]
 
-SUBTITLE = "Bored? Game on! Pick a game: (v1.3.0)"
+SUBTITLE = "Bored? Game on! Pick a game: (v%s)" % _pkg_version
 
 GAME_HOTKEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0",
                 "a", "b", "c", "d", "e", "f"]

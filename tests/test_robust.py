@@ -300,3 +300,9 @@ def test_round19_flappy_clamps_bad_dimensions():
         assert st.step(True) in (True, False)
     st = flappy.FlapState(width=40, height=16, gap=999, seed=0)
     assert st.gap <= st.height - 2
+
+
+def test_round21_menu_subtitle_tracks_package_version():
+    from gamebored import __version__, app as app_mod
+    assert __version__ in app_mod.SUBTITLE
+    assert "1.2.0" not in app_mod.SUBTITLE or __version__ == "1.2.0"
