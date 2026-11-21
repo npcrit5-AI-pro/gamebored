@@ -125,7 +125,17 @@ including Runner.
 - Round 55: Sokoban footer says `boxes home N/M` instead of cryptic
   `home N/M`.
 
-Final: version stays 1.4.0, full suite green (142 passed), a manual
+- Round 56: Runner CONTROLS and README say `r restart room` instead
+  of cryptic `r room`.
+- Round 57: Sokoban and Runner room-picker footers advertise `? help`
+  (they answer it since Round 54).
+- Round 58: the full Help screen documents `/ filter`.
+- Round 59: Runner flashes `CLEAR! +bonus` (from ROOM_BONUS) for 1.2s on
+  room clear, mirroring the OUCH! death toast.
+- Round 60: Sokoban flashes `SOLVED!` for 1.2s on room clear (level and
+  endless modes), mirroring Runner.
+
+Final: version stays 1.4.0, full suite green (147 passed), a manual
 `install.sh`/`uninstall.sh` round-trip verified with a scratch HOME, and
 `python3 -m gamebored --list` shows 16 games including Runner.
 
