@@ -27,9 +27,21 @@ class FlapState:
     """Headless flapping logic: no curses calls in here."""
 
     def __init__(self, width=40, height=16, seed=None, gap=GAP):
-        self.width = width
-        self.height = height
-        self.gap = gap
+        try:
+            width = int(width)
+        except (TypeError, ValueError):
+            width = 40
+        try:
+            height = int(height)
+        except (TypeError, ValueError):
+            height = 16
+        try:
+            gap = int(gap)
+        except (TypeError, ValueError):
+            gap = GAP
+        self.width = max(12, width)
+        self.height = max(8, height)
+        self.gap = max(2, min(gap, self.height - 2))
         self.rng = random.Random(seed)
         self.bird_x = 8
         self.bird_y = float(height // 2)

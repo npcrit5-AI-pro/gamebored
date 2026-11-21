@@ -290,3 +290,13 @@ def test_round18_snake_rejects_bad_dimensions_and_turns():
     assert st.pending == before
     st.set_direction(snake.UP)
     assert st.pending == snake.UP
+
+
+def test_round19_flappy_clamps_bad_dimensions():
+    from gamebored.games import flappy
+    for bad in (0, -4, None):
+        st = flappy.FlapState(width=bad, height=bad, seed=0)
+        assert st.width >= 12 and st.height >= 8
+        assert st.step(True) in (True, False)
+    st = flappy.FlapState(width=40, height=16, gap=999, seed=0)
+    assert st.gap <= st.height - 2
