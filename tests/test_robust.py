@@ -76,3 +76,14 @@ def test_round6_hangman_ignores_bad_guesses():
         assert st.guess(bad) is None
     assert st.wrong == 0 and st.guessed == set()
     assert st.guess("a") is True
+
+
+def test_round7_g2048_bad_direction_and_board_are_noop():
+    from gamebored.games import g2048
+    board = [[2, 2, 4, 4], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
+    new, gained, moved = g2048.move_board(board, "diagonal")
+    assert new == board and gained == 0 and moved is False
+    new2, _, moved2 = g2048.move_board([[2, 2], [4]], "left")
+    assert moved2 is False and len(new2) == 4
+    st = g2048.State2048(seed=0)
+    assert st.move("diagonal") is False
