@@ -17,7 +17,8 @@ import urllib.parse
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 
-USER_AGENT = "GameBored/1.3.0 (educational terminal search)"
+
+USER_AGENT = "GameBored/1.4.0 (educational terminal search)"
 TIMEOUT = 4
 
 SOURCES = ("duckduckgo", "wikipedia", "hackernews")

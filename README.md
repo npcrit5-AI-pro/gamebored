@@ -1,4 +1,4 @@
-# GameBored v1.3.0
+# GameBored v1.4.0
 
 GameBored: a colorful terminal arcade menu with 16 games plus Bored
 Wondering, a keyless web search inside the app. Frederick types
