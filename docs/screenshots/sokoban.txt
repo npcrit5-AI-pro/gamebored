@@ -1,5 +1,5 @@
 
-                      SOKOBAN  room:2/3  moves:0  score:0
+                       SOKOBAN room:2/205 moves:0 score:0
 
 
 

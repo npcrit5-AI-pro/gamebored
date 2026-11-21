@@ -118,7 +118,7 @@ def _pick_translator_game(win):
                         else ui.color((i % 6) + 1))
                 ui.safe_addstr(win, row, x, line, attr)
                 row += 1
-            ui.footer(win, "1-9,0,a-e or arrows+Enter pick | ? help | q back")
+            ui.footer(win, "1-9,0,a-f or arrows+Enter pick | ? help | q back")
             win.refresh()
         except curses.error:
             pass
@@ -235,7 +235,7 @@ def build_help_lines(game_mods):
         "",
         "MENU",
         "  Up/Down (or j/k) moves - Enter opens the highlighted entry.",
-        "  Hotkeys: 1-9,0,a-e games - W search - H scores - T translator.",
+        "  Hotkeys: 1-9,0,a-f games - W search - H scores - T translator.",
         "  ? shows this help - q/Esc quits.",
         "",
         "WHILE PLAYING",

@@ -50,6 +50,8 @@ CONVERSIONS = {
                  "example": "win (150) -> 1,500 BP"},
     "flappy": {"rate": 100, "raw": "pipes passed",
                "example": "15 pipes -> 1,500 BP"},
+    "platformer": {"rate": 2, "raw": "room points (200/room + 10/coin)",
+                   "example": "750 pts -> 1,500 BP"},
 }
 
 

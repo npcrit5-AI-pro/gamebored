@@ -80,9 +80,10 @@ GAME_KEYS = [
     ("0", "crate\r"),         # wordle: type a word + submit
     ("a", "\x1b[A\x1b[B\x1b[C\x1b[D"),  # frogger: hop around
     ("b", "1234"),            # simon: repeat-ish input
-    ("c", "\x1b[A\x1b[B\x1b[C\x1b[D"),  # sokoban: push around
+    ("c", "\r\x1b[A\x1b[B\x1b[C\x1b[D"),  # sokoban: pick room 1, push around
     ("d", "4"),               # connect4: drop in column 4
     ("e", "   "),             # flappy: flap a few times
+    ("f", "\r\x1b[C\x1b[C "),  # runner: pick room 1, run + jump
     ("h", ""),                # high scores table
 ]
 
@@ -254,6 +255,42 @@ def test_in_game_help_overlay_closes_cleanly():
         child.expect(HELP_RE, timeout=5)
         child.send("x")  # any key closes the overlay
         time.sleep(0.8)
+        quit_to_menu(child)
+    finally:
+        close(child)
+
+
+def test_level_select_opens_and_starts_sokoban():
+    child = spawn()
+    try:
+        expect_menu(child)
+        child.send("c")  # sokoban -> room picker
+        time.sleep(1.0)
+        child.expect(re.compile(r"PICK A ROOM", re.S), timeout=5)
+        child.expect(re.compile(r"room\s+1", re.S), timeout=5)
+        child.send("\r")  # start room 1
+        time.sleep(1.0)
+        child.send("\x1b[C")  # push around
+        time.sleep(0.8)
+        child.expect(re.compile(r"SOKOBAN", re.S), timeout=5)
+        quit_to_menu(child)  # q from gameplay records score, back to menu
+    finally:
+        close(child)
+
+
+def test_level_select_opens_and_starts_runner():
+    child = spawn()
+    try:
+        expect_menu(child)
+        child.send("f")  # runner -> room picker
+        time.sleep(1.0)
+        child.expect(re.compile(r"PICK A ROOM", re.S), timeout=5)
+        child.expect(re.compile(r"room\s+1", re.S), timeout=5)
+        child.send("\r")  # start room 1
+        time.sleep(1.0)
+        child.send("\x1b[C ")  # run + jump
+        time.sleep(1.0)
+        child.expect(re.compile(r"RUNNER", re.S), timeout=5)
         quit_to_menu(child)
     finally:
         close(child)

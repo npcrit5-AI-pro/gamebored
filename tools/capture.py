@@ -192,6 +192,15 @@ def build_states():
     flappy.draw(scr, fl)
     states["flappy"] = scr.text()
 
+    from gamebored.games import platformer
+    rn = platformer.RunState(platformer.LEVELS[12])
+    for _ in range(4):
+        rn.step(0.09, move=1)
+    scr = FakeScreen()
+    platformer.draw(scr, rn, platformer.room_label(12, len(platformer.LEVELS),
+                                                   rn))
+    states["runner"] = scr.text()
+
     return states
 
 
