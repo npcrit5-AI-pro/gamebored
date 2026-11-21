@@ -47,3 +47,14 @@ def test_round3_translator_never_crashes():
     assert translator_mod.to_bp("snake", 15) == 1500
     assert translator_mod.to_bp("nope", 15) == 0
     assert translator_mod.total_bp({"snake": {"high": "junk"}}) >= 0
+
+
+def test_round4_minesweeper_out_of_bounds_is_noop():
+    from gamebored.games import minesweeper
+    st = minesweeper.MineState(seed=1)
+    for r, c in ((99, 99), (-1, -1), (0, 99), (99, 0)):
+        st.reveal(r, c)
+        st.toggle_flag(r, c)
+    assert not st.over
+    st.reveal(4, 4)
+    assert st.started and not st.over
