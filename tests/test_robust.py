@@ -159,3 +159,13 @@ def test_round11_connect4_rejects_bad_columns():
     for _ in range(connect4.ROWS + 2):
         st.drop(0, "X")
     assert st.drop(0, "X") is None
+
+
+def test_round12_frogger_tiny_dimensions_clamped():
+    from gamebored.games import frogger
+    for bad in (0, -3, None):
+        st = frogger.FrogState(width=bad, lanes=bad, seed=0)
+        assert st.width >= 4 and st.lanes >= 1
+        assert st.step() is True
+    st = frogger.new_state(seed=1)
+    assert st.step() is True
