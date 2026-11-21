@@ -142,7 +142,7 @@ including Runner.
 - Round 63: `uninstall.sh` backs up `progress.json` and `install.sh`
   restores it — reinstalling no longer wipes unlocked rooms or bests.
 
-Final: version stays 1.4.0, full suite green (149 passed), a manual
+Final: version stays 1.4.0, full suite green (150 passed), a manual
 `install.sh`/`uninstall.sh` round-trip verified with a scratch HOME, and
 `python3 -m gamebored --list` shows 16 games including Runner.
 
