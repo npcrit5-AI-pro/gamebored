@@ -359,7 +359,7 @@ def game_over_screen(win, game_title, lines, score=None, best=None,
         if is_new_high:
             box_lines.append("NEW HIGH SCORE!")
         box_lines.append("")
-        box_lines.append("Enter/q: back to menu")
+        box_lines.append("any key: back to menu")
         box_w = min(w - 4, max(40, max(len(ln) for ln in box_lines) + 6))
         box_h = min(len(box_lines) + 2, h)
         y0 = max(0, (h - box_h) // 2)
@@ -377,10 +377,10 @@ def game_over_screen(win, game_title, lines, score=None, best=None,
                 attr = head_attr
             elif ln == "NEW HIGH SCORE!":
                 attr = color(3) | curses.A_BOLD | curses.A_BLINK
-            elif ln == "Enter/q: back to menu":
+            elif ln == "any key: back to menu":
                 attr = color(7)
             centered(win, y0 + 1 + i, ln[:box_w], attr)
-        footer(win, "Enter/q back to menu")
+        footer(win, "any key back to menu")
         win.refresh()
         while True:
             try:

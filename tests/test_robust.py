@@ -356,6 +356,42 @@ def test_round28_menu_restores_hidden_cursor(monkeypatch):
     assert calls == [0]
 
 
+def test_round29_game_over_returns_on_any_key():
+    import curses
+    from gamebored import ui as ui_mod
+
+    class FakeWin:
+        def __init__(self):
+            self.shown = []
+
+        def getmaxyx(self):
+            return (24, 80)
+
+        def clear(self):
+            pass
+
+        def refresh(self):
+            pass
+
+        def timeout(self, delay):
+            pass
+
+        def addstr(self, y, x, text, attr=0):
+            self.shown.append(text)
+
+        def addch(self, y, x, ch, attr=0):
+            self.shown.append(ch)
+
+        def getch(self):
+            return ord("z")
+
+    win = FakeWin()
+    assert ui_mod.game_over_screen(win, "Snake", [], score=5, best=9,
+                                   game_id="snake") == ord("z")
+    assert any("any key" in line for line in win.shown
+                 if isinstance(line, str))
+
+
 def test_round24_pong_ignores_bad_step_input():
     from gamebored.games import pong
     st = pong.PongState(width=30, height=10)
