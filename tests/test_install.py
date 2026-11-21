@@ -43,3 +43,22 @@ def test_install_uninstall_roundtrip(tmp_path):
     assert not os.path.exists(launcher)
     assert not os.path.exists(
         os.path.join(home, ".local", "share", "gamebored"))
+
+
+def test_scores_survive_uninstall_reinstall(tmp_path):
+    if os.name != "posix":
+        pytest.skip("installer targets POSIX shells")
+    home = str(tmp_path / "home2")
+    os.makedirs(home)
+    assert _run(INSTALL, home).returncode == 0
+    dest = os.path.join(home, ".local", "share", "gamebored")
+    with open(os.path.join(dest, "scores.json"), "w") as fh:
+        fh.write('{"snake": {"high": 9, "plays": 2, "wins": 0}}')
+    assert _run(UNINSTALL, home).returncode == 0
+    assert not os.path.exists(dest)
+    backup = os.path.join(home, ".local", "share",
+                          "gamebored-scores-backup.json")
+    assert os.path.isfile(backup)
+    assert _run(INSTALL, home).returncode == 0
+    with open(os.path.join(dest, "scores.json")) as fh:
+        assert '"high": 9' in fh.read()

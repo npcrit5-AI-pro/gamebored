@@ -1,9 +1,16 @@
 #!/usr/bin/env bash
-# GameBored uninstaller: removes the home install + launchers, keeps nothing.
+# GameBored uninstaller: removes the home install + launchers.
+# Your high scores are backed up first, and the next install restores them.
 set -euo pipefail
 
 DEST="$HOME/.local/share/gamebored"
+BACKUP="$HOME/.local/share/gamebored-scores-backup.json"
 BIN_DIR="$HOME/.local/bin"
+
+if [[ -f "$DEST/scores.json" ]]; then
+  cp "$DEST/scores.json" "$BACKUP"
+  echo "High scores backed up to $BACKUP"
+fi
 
 rm -f "$BIN_DIR/GameBored" "$BIN_DIR/gamebored"
 rm -rf "$DEST"

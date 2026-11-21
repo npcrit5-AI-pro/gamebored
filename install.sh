@@ -25,6 +25,11 @@ mkdir -p "$DEST" "$BIN_DIR"
 # Copy the game package (and nothing else) to ~/.local/share/gamebored
 rm -rf "$DEST/gamebored"
 cp -r "$SRC_DIR/gamebored" "$DEST/gamebored"
+# Restore high scores kept by a previous uninstall, if any.
+if [[ -f "$HOME/.local/share/gamebored-scores-backup.json" && ! -f "$DEST/scores.json" ]]; then
+  cp "$HOME/.local/share/gamebored-scores-backup.json" "$DEST/scores.json"
+  echo "High scores restored from backup."
+fi
 # Drop caches if the repo shipped any
 find "$DEST" -name "__pycache__" -type d -prune -exec rm -rf {} + 2>/dev/null || true
 
