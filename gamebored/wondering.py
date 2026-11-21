@@ -8,7 +8,7 @@ from . import ui
 
 TITLE = "Bored Wondering"
 DESCRIPTION = "Search the web, keyless"
-CONTROLS = "Type + Enter search | Up/Down pick | Enter open | Esc menu"
+CONTROLS = "Type + Enter search | Up/Down pick | Enter open | q/Esc menu"
 GAME_ID = "wondering"
 CATEGORY = "Explore"
 

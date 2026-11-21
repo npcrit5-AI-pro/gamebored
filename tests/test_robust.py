@@ -676,6 +676,13 @@ def test_round45_every_game_advertises_pause_help_menu():
         assert "q" in controls and "menu" in controls, mod.GAME_ID
 
 
+def test_round52_wondering_names_both_quit_keys():
+    from gamebored import ui as ui_mod
+    from gamebored import wondering as wondering_mod
+    assert not hasattr(ui_mod, "FOOTER_HELP")  # dead shortcut text removed
+    assert "q" in wondering_mod.CONTROLS and "menu" in wondering_mod.CONTROLS
+
+
 def test_round46_picker_shows_best_moves():
     from gamebored.games import sokoban
 

@@ -17,8 +17,6 @@ TITLE = "GAMEBORED"
 QUIT_KEYS = (27, ord("q"), ord("Q"))  # Esc / q
 PAUSE_KEYS = (ord("p"), ord("P"))
 HELP_KEYS = (ord("?"),)
-
-FOOTER_HELP = "Up/Down move | Enter open | 1-9,0/W/H/T/? shortcuts | q quit"
 GAME_FOOTER_SUFFIX = "p pause | ? help | q menu"
 
 
