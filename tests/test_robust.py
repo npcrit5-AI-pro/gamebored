@@ -366,3 +366,16 @@ def test_round26_invaders_level_is_always_sane():
         st.score += 10 * st.level
         assert isinstance(st.score, int)
         st.step()
+
+
+def test_round27_tetris_ignores_bad_moves():
+    from gamebored.games import tetris
+    st = tetris.TetrisState(seed=0)
+    assert st.move("x", None) is False
+    st.rotate_piece()  # must not crash
+    st.over = True
+    assert st.move(0, 1) is False
+    st.piece = None
+    st.over = False
+    st.rotate_piece()  # must not crash
+    assert st.move(0, 1) is False

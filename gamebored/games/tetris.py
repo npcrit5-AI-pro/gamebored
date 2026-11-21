@@ -84,6 +84,12 @@ class TetrisState:
             self.over = True
 
     def move(self, dx, dy):
+        if self.over or self.piece is None:
+            return False
+        try:
+            dx, dy = int(dx), int(dy)
+        except (TypeError, ValueError):
+            return False
         name, cells = self.piece
         if not collides(self.board, cells, self.px + dx, self.py + dy):
             self.px += dx
@@ -92,6 +98,8 @@ class TetrisState:
         return False
 
     def rotate_piece(self):
+        if self.over or self.piece is None:
+            return
         name, cells = self.piece
         if name == "O":
             return
