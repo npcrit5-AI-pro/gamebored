@@ -87,3 +87,12 @@ def test_round7_g2048_bad_direction_and_board_are_noop():
     assert moved2 is False and len(new2) == 4
     st = g2048.State2048(seed=0)
     assert st.move("diagonal") is False
+
+
+def test_round8_sokoban_bad_level_clamps():
+    from gamebored.games import sokoban
+    for bad in (9999, -1, None, "x"):
+        st = sokoban.SokState(level=bad)
+        assert 0 <= st.level < len(sokoban.LEVELS)
+        assert st.move(1, 0) in (True, False)
+    assert sokoban.new_state(99).level == len(sokoban.LEVELS) - 1

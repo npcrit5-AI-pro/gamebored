@@ -35,7 +35,11 @@ class SokState:
     """Headless box-pushing logic: no curses calls in here."""
 
     def __init__(self, level=0, rows=None, endless=None):
-        self.level = level
+        try:
+            level = int(level)
+        except (TypeError, ValueError):
+            level = 0
+        self.level = max(0, min(level, len(LEVELS) - 1))
         self.endless = endless  # (seed, n) or None
         self.moves = 0
         self.score = 0
@@ -48,7 +52,7 @@ class SokState:
                            endless_rows=gen_endless_verified(endless[0],
                                                              endless[1]))
         else:
-            self._load_row(level)
+            self._load_row(self.level)
 
     def _load_row(self, level, endless_rows=None):
         rows = endless_rows if endless_rows is not None else LEVELS[level]
