@@ -76,7 +76,12 @@ def show_high_scores(win, score_store):
         if key == curses.KEY_UP:
             top = max(0, top - 1)
         elif key == curses.KEY_DOWN:
-            top += 1
+            try:
+                h, _ = win.getmaxyx()
+            except curses.error:
+                h = 24
+            visible = max(1, h - 3 - 3)
+            top = min(top + 1, max(0, len(rows) - visible))
         elif key == curses.KEY_RESIZE:
             continue
         elif key in ui.HELP_KEYS:

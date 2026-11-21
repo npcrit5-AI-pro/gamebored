@@ -207,3 +207,34 @@ def test_round13_wondering_detail_scroll_clamps():
     assert win.added
     lines = wondering_mod._detail_lines(result, 80)
     assert len(lines) <= max(1, 24 - 5) + 1
+
+
+def test_round14_high_scores_scroll_clamps():
+    import curses
+    from gamebored import extras as extras_mod
+
+    class FakeWin:
+        def __init__(self, keys):
+            self.keys = list(keys)
+
+        def getmaxyx(self):
+            return (24, 80)
+
+        def clear(self):
+            pass
+
+        def refresh(self):
+            pass
+
+        def addstr(self, y, x, text, attr=0):
+            pass
+
+        def getch(self):
+            if self.keys:
+                return self.keys.pop(0)
+            return ord("q")
+
+    win = FakeWin([curses.KEY_DOWN] * 100)
+    extras_mod.show_high_scores(win, {})
+    win2 = FakeWin([curses.KEY_UP] * 5)
+    extras_mod.show_high_scores(win2, {"snake": {"high": 9, "plays": 2}})
