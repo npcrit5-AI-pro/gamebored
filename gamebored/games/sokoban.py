@@ -21,7 +21,7 @@ from . import sokoban_solver as solver_mod
 
 TITLE = "Sokoban"
 DESCRIPTION = "Push boxes onto targets"
-CONTROLS = ("Arrows/WASD push | r restart | p pause | ? help | q menu")
+CONTROLS = ("Arrows/WASD push | r restart | u undo | p pause | ? help | q menu")
 GAME_ID = "sokoban"
 CATEGORY = "PUZZLE"
 
@@ -45,6 +45,7 @@ class SokState:
         self.score = 0
         self.over = False
         self.won = False
+        self.history = []
         if rows is not None:
             self._load_row(None, endless_rows=rows)
         elif endless is not None:
@@ -84,6 +85,12 @@ class SokState:
             bx, by = nx + dx, ny + dy
             if (bx, by) in self.walls or (bx, by) in self.boxes:
                 return False
+        self.history.append((self.player, set(self.boxes), self.moves,
+                             self.score, self.over, self.won))
+        if len(self.history) > 2000:
+            del self.history[:-2000]
+        if (nx, ny) in self.boxes:
+            bx, by = nx + dx, ny + dy
             self.boxes.discard((nx, ny))
             self.boxes.add((bx, by))
         self.player = (nx, ny)
@@ -94,11 +101,25 @@ class SokState:
             self.won = True
         return True
 
+    def undo(self):
+        """Take back the last move. Returns True if anything was undone."""
+        if not self.history:
+            return False
+        player, boxes, moves, score, over, won = self.history.pop()
+        self.player = player
+        self.boxes = boxes
+        self.moves = moves
+        self.score = score
+        self.over = over
+        self.won = won
+        return True
+
     def restart(self):
         self.moves = 0
         self.over = False
         self.won = False
         self.score = 0
+        self.history = []
         if self.endless is None:
             self._load_row(self.level)
         else:
@@ -415,6 +436,8 @@ def play(stdscr, score_store):
             continue
         if key in (ord("r"), ord("R")):
             st.restart()
+        elif key in (ord("u"), ord("U")):
+            st.undo()
         elif key in KEYMAP:
             dx, dy = KEYMAP[key]
             st.move(dx, dy)

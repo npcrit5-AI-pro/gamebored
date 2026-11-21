@@ -556,6 +556,34 @@ def test_round37_room_pickers_survive_key_mashing():
         FakeWin([10]), {}, {}) == ("level", 0)
 
 
+def test_round40_sokoban_undo_takes_back_moves():
+    from gamebored.games import sokoban
+    st = sokoban.SokState(level=0)
+    assert st.undo() is False  # nothing to undo
+    p0, boxes0 = st.player, set(st.boxes)
+    assert st.move(0, -1) is True  # shove the box up onto its target
+    assert st.undo() is True
+    assert st.player == p0 and st.boxes == boxes0 and st.moves == 0
+    assert st.undo() is False
+    # pushing a box then undoing restores the box too
+    st2 = sokoban.SokState(level=1)
+    assert st2.move(-1, 0) is True
+    assert st2.move(1, 0) is True
+    mid_player, mid_boxes = st2.player, set(st2.boxes)
+    assert st2.move(-1, 0) is True
+    assert st2.undo() is True
+    assert st2.player == mid_player and st2.boxes == mid_boxes
+    # restart clears the undo trail
+    st2.restart()
+    assert st2.undo() is False
+    # undo caps memory on long sessions
+    st3 = sokoban.SokState(level=0, rows=sokoban.LEVELS[1])
+    for _ in range(2100):
+        st3.move(1, 0)
+        st3.move(-1, 0)
+    assert len(st3.history) <= 2000
+
+
 def test_round29_game_over_returns_on_any_key():
     import curses
     from gamebored import ui as ui_mod
