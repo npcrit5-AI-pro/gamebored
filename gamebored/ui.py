@@ -228,8 +228,10 @@ def pause_overlay(win, title="PAUSED"):
         try:
             h, w = win.getmaxyx()
             box_w = min(44, w - 4)
+            headline = "PAUSED" if title in ("PAUSED", "") else \
+                "PAUSED - %s" % str(title)[:20]
             lines = [
-                title,
+                headline,
                 "",
                 "Take a breather. Your game is waiting.",
                 "",

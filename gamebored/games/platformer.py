@@ -779,7 +779,7 @@ def play(stdscr, score_store):
             scores_mod.save(score_store)
             return
         elif key in ui.PAUSE_KEYS:
-            if ui.pause_overlay(stdscr) == "quit":
+            if ui.pause_overlay(stdscr, TITLE) == "quit":
                 return
             try:
                 stdscr.timeout(90)

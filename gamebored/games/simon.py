@@ -174,7 +174,7 @@ def play(stdscr, score_store):
                 scores_mod.save(score_store)
                 return
             if key in ui.PAUSE_KEYS:
-                if ui.pause_overlay(stdscr) == "quit":
+                if ui.pause_overlay(stdscr, TITLE) == "quit":
                     return
                 continue
             if key in ui.HELP_KEYS:

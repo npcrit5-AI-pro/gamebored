@@ -199,7 +199,7 @@ def play(stdscr, score_store):
         if key in ui.QUIT_KEYS:
             return
         elif key in ui.PAUSE_KEYS:
-            if ui.pause_overlay(stdscr) == "quit":
+            if ui.pause_overlay(stdscr, TITLE) == "quit":
                 return
             continue
         if key in ui.HELP_KEYS:

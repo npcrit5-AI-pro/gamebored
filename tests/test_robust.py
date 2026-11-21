@@ -683,6 +683,40 @@ def test_round52_wondering_names_both_quit_keys():
     assert "q" in wondering_mod.CONTROLS and "menu" in wondering_mod.CONTROLS
 
 
+def test_round53_pause_names_the_game():
+    from gamebored import ui as ui_mod
+
+    class FakeWin:
+        def __init__(self, keys):
+            self.keys = list(keys)
+            self.lines = []
+
+        def getmaxyx(self):
+            return (24, 80)
+
+        def refresh(self):
+            pass
+
+        def timeout(self, delay):
+            pass
+
+        def addstr(self, y, x, text, attr=0):
+            self.lines.append(text)
+
+        def addch(self, y, x, ch, attr=0):
+            self.lines.append(ch)
+
+        def getch(self):
+            return self.keys.pop(0) if self.keys else ord("p")
+
+    win = FakeWin([ord("p")])
+    assert ui_mod.pause_overlay(win, "Snake") == "resume"
+    assert any("PAUSED - Snake" in ln for ln in win.lines
+               if isinstance(ln, str)), win.lines
+    win2 = FakeWin([ord("q")])
+    assert ui_mod.pause_overlay(win2) == "quit"
+
+
 def test_round46_picker_shows_best_moves():
     from gamebored.games import sokoban
 
