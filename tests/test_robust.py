@@ -340,6 +340,22 @@ def test_round23_word_answers_normalized():
     assert w3.submit() is True and w3.won
 
 
+def test_round28_menu_restores_hidden_cursor(monkeypatch):
+    from gamebored import app as app_mod
+    calls = []
+    monkeypatch.setattr("curses.curs_set", lambda n: calls.append(n))
+
+    class FakeWin:
+        def keypad(self, flag):
+            pass
+
+        def timeout(self, delay):
+            pass
+
+    app_mod._hide_cursor(FakeWin())
+    assert calls == [0]
+
+
 def test_round24_pong_ignores_bad_step_input():
     from gamebored.games import pong
     st = pong.PongState(width=30, height=10)

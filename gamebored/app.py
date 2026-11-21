@@ -188,7 +188,10 @@ def hotkey_index(entries, key):
 
 
 def menu_loop(stdscr):
-    curses.curs_set(0)
+    try:
+        curses.curs_set(0)
+    except curses.error:
+        pass
     try:
         stdscr.keypad(True)
     except curses.error:
@@ -226,6 +229,7 @@ def menu_loop(stdscr):
             selected = (selected + 1) % len(entries)
         elif key in (10, 13, curses.KEY_ENTER, ord(" ")):
             launch_entry(stdscr, entries[selected], score_store)
+            _hide_cursor(stdscr)
             score_store = scores_mod.load()
         elif key == curses.KEY_RESIZE:
             continue
@@ -234,7 +238,21 @@ def menu_loop(stdscr):
             if idx is not None:
                 selected = idx
                 launch_entry(stdscr, entries[idx], score_store)
+                _hide_cursor(stdscr)
                 score_store = scores_mod.load()
+
+
+def _hide_cursor(stdscr):
+    """Games with text entry show the cursor; always hide it for the menu."""
+    try:
+        curses.curs_set(0)
+    except curses.error:
+        pass
+    try:
+        stdscr.keypad(True)
+        stdscr.timeout(-1)
+    except curses.error:
+        pass
 
 
 def launch_entry(stdscr, entry, score_store):
