@@ -9,7 +9,7 @@ from .. import words as words_mod
 
 TITLE = "Word Guess"
 DESCRIPTION = "Wordle-style: 6 tries"
-CONTROLS = "Type + Enter submit | Backspace delete | p pause | q menu"
+CONTROLS = "Type + Enter submit | Backspace delete | p pause | ? help | q menu"
 GAME_ID = "wordle"
 CATEGORY = "PUZZLE"
 WORD_LEN = 5

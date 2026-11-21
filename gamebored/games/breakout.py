@@ -8,7 +8,7 @@ from .. import ui
 
 TITLE = "Breakout"
 DESCRIPTION = "Bounce ball, smash bricks"
-CONTROLS = "Left/Right or A/D move paddle | 3 lives | p pause | q menu"
+CONTROLS = "Left/Right or A/D move paddle | 3 lives | p pause | ? help | q menu"
 GAME_ID = "breakout"
 CATEGORY = "ACTION"
 

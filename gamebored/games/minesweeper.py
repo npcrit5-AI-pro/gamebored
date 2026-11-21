@@ -9,7 +9,7 @@ from .. import ui
 
 TITLE = "Minesweeper"
 DESCRIPTION = "Clear mines without boom"
-CONTROLS = "Arrows move | Space/Enter dig | f flag | p pause | q menu"
+CONTROLS = "Arrows move | Space/Enter dig | f flag | p pause | ? help | q menu"
 GAME_ID = "minesweeper"
 CATEGORY = "PUZZLE"
 

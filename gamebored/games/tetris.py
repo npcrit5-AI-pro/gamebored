@@ -9,7 +9,7 @@ from .. import ui
 
 TITLE = "Block Stack"
 DESCRIPTION = "Tetris-style falling blocks"
-CONTROLS = "Left/Right move | Down soft-drop | Up rotate | Space hard-drop | p pause | q menu"
+CONTROLS = "Left/Right move | Down soft-drop | Up rotate | Space hard-drop | p pause | ? help | q menu"
 GAME_ID = "tetris"
 CATEGORY = "PUZZLE"
 

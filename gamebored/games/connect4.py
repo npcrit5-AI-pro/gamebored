@@ -13,7 +13,7 @@ from .. import ui
 
 TITLE = "Connect Four"
 DESCRIPTION = "Line up four vs the CPU"
-CONTROLS = "Left/Right move | Space/Enter or 1-7 drop | p pause | q menu"
+CONTROLS = "Left/Right move | Space/Enter or 1-7 drop | p pause | ? help | q menu"
 GAME_ID = "connect4"
 CATEGORY = "CLASSIC"
 

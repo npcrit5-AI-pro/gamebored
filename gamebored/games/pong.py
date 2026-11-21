@@ -8,7 +8,7 @@ from .. import ui
 
 TITLE = "Pong"
 DESCRIPTION = "Classic paddle duel vs CPU"
-CONTROLS = "Up/Down or W/S move | first to 5 | p pause | q menu"
+CONTROLS = "Up/Down or W/S move | first to 5 | p pause | ? help | q menu"
 GAME_ID = "pong"
 CATEGORY = "ACTION"
 WIN_SCORE = 5

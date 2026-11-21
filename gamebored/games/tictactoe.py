@@ -7,7 +7,7 @@ from .. import ui
 
 TITLE = "Tic-Tac-Toe"
 DESCRIPTION = "Beat the computer at X/O"
-CONTROLS = "Arrows move | Space/Enter place | 1-9 quick | p pause | q menu"
+CONTROLS = "Arrows move | Space/Enter place | 1-9 quick | p pause | ? help | q menu"
 GAME_ID = "tictactoe"
 CATEGORY = "CLASSIC"
 

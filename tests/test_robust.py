@@ -635,6 +635,16 @@ def test_round44_runner_restart_room_keeps_score_and_lives():
     assert "r room" in platformer.CONTROLS
 
 
+def test_round45_every_game_advertises_pause_help_menu():
+    from gamebored.games import GAMES
+    assert len(GAMES) == 16
+    for mod in GAMES:
+        controls = mod.CONTROLS.lower()
+        assert "p" in controls and "pause" in controls, mod.GAME_ID
+        assert "?" in controls and "help" in controls, mod.GAME_ID
+        assert "q" in controls and "menu" in controls, mod.GAME_ID
+
+
 def test_round37_room_pickers_survive_key_mashing():
     import curses
     from gamebored.games import sokoban, platformer

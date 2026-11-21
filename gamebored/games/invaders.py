@@ -9,7 +9,7 @@ from .. import ui
 
 TITLE = "Invaders"
 DESCRIPTION = "Shoot the descending aliens"
-CONTROLS = "Left/Right or A/D move | Space shoot | p pause | q menu"
+CONTROLS = "Left/Right or A/D move | Space shoot | p pause | ? help | q menu"
 GAME_ID = "invaders"
 CATEGORY = "ACTION"
 
