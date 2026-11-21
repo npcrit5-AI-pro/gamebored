@@ -41,15 +41,21 @@ def save(scores, path=SCORES_FILE):
             _ensure_dir()
         # Atomic write: a crash mid-save must never leave half a JSON file.
         tmp_path = path + ".tmp"
-        with open(tmp_path, "w", encoding="utf-8") as fh:
-            json.dump(scores, fh, indent=2, sort_keys=True)
-            fh.flush()
+        try:
+            with open(tmp_path, "w", encoding="utf-8") as fh:
+                json.dump(scores, fh, indent=2, sort_keys=True)
+                fh.flush()
+                try:
+                    os.fsync(fh.fileno())
+                except OSError:
+                    pass
+            os.replace(tmp_path, path)
+        except (OSError, TypeError, ValueError):
             try:
-                os.fsync(fh.fileno())
+                os.unlink(tmp_path)
             except OSError:
                 pass
-        os.replace(tmp_path, path)
-    except (OSError, TypeError, ValueError):
+    except OSError:
         pass
 
 
