@@ -367,6 +367,9 @@ def play(stdscr, score_store):
         st = SokState(idx)
         total_score = 0
         level_idx = idx
+    room_best = (None if kind == "endless" else
+                 progress_mod.get_best(progress_mod.load(), GAME_ID,
+                                       level_idx))
     while True:
         if ui.too_small(stdscr):
             ui.show_too_small(stdscr)
@@ -386,7 +389,11 @@ def play(stdscr, score_store):
                  label="Generated level %d seed:%s moves:%d score:%d" % (
                      n, seed, st.moves, total_score))
         else:
-            draw(stdscr, st, total_score)
+            best_txt = str(room_best) if room_best else "-"
+            draw(stdscr, st, total_score,
+                 label="SOKOBAN room:%d/%d moves:%d best:%s score:%d" % (
+                     st.level + 1, len(LEVELS), st.moves, best_txt,
+                     total_score))
         ui.game_footer(stdscr, CONTROLS + " | home %d/%d" % (
             st.boxes_home, len(st.boxes)))
         try:
@@ -402,6 +409,8 @@ def play(stdscr, score_store):
                 st.score = 0
                 continue
             progress = progress_mod.load()
+            room_best = progress_mod.record_best(progress, GAME_ID,
+                                                 level_idx, st.moves)
             progress_mod.record_level_complete(progress, GAME_ID,
                                                level_idx, total)
             if level_idx + 1 >= total:
@@ -415,6 +424,7 @@ def play(stdscr, score_store):
             level_idx += 1
             st = SokState(level_idx)
             st.score = 0
+            room_best = progress_mod.get_best(progress, GAME_ID, level_idx)
             continue
         try:
             key = stdscr.getch()

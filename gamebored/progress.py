@@ -107,3 +107,35 @@ def endless_unlocked(progress, game_id, total_levels):
     if not isinstance(entry, dict):
         return False
     return bool(entry.get("completed_all"))
+
+
+def get_best(progress, game_id, key):
+    """Fewest moves recorded for a room key, or None if never cleared."""
+    progress = _progress_dict(progress)
+    entry = progress.get(game_id)
+    if not isinstance(entry, dict):
+        return None
+    best = entry.get("best")
+    if not isinstance(best, dict):
+        return None
+    value = _safe_int(best.get(str(key)), -1)
+    return value if value > 0 else None
+
+
+def record_best(progress, game_id, key, moves, path=PROGRESS_FILE):
+    """Keep the fewest moves for a room key. Returns the stored best."""
+    progress = _progress_dict(progress)
+    entry = progress.get(game_id)
+    if not isinstance(entry, dict):
+        entry = {}
+        progress[game_id] = entry
+    best = entry.get("best")
+    if not isinstance(best, dict):
+        best = {}
+        entry["best"] = best
+    moves = _safe_int(moves, -1)
+    prev = get_best(progress, game_id, key)
+    if moves > 0 and (prev is None or moves < prev):
+        best[str(key)] = moves
+    save(progress, path)
+    return get_best(progress, game_id, key)

@@ -516,6 +516,32 @@ def test_round36_runner_ignores_junk_input():
         ("dead", "won", "over", None)
 
 
+def test_round41_sokoban_best_moves_tracked(tmp_path):
+    from gamebored import progress as progress_mod
+    from gamebored.games import sokoban
+    path = str(tmp_path / "progress.json")
+    store = {}
+    assert progress_mod.get_best(store, "sokoban", 3) is None
+    assert progress_mod.record_best(store, "sokoban", 3, 42,
+                                    path=path) == 42
+    assert progress_mod.record_best(store, "sokoban", 3, 99,
+                                    path=path) == 42
+    assert progress_mod.record_best(store, "sokoban", 3, 10,
+                                    path=path) == 10
+    for bad in (0, -5, "x", None):
+        assert progress_mod.record_best(store, "sokoban", 3, bad,
+                                        path=path) == 10, bad
+    assert progress_mod.get_best({"sokoban": "junk"}, "sokoban", 3) is None
+    assert progress_mod.get_best({"sokoban": {"best": {"3": "abc"}}},
+                                 "sokoban", 3) is None
+    # solving a room end to end records its best
+    st = sokoban.SokState(level=0)
+    assert st.move(0, -1) is True and st.over
+    store2 = {}
+    progress_mod.record_best(store2, "sokoban", 0, st.moves, path=path)
+    assert progress_mod.get_best(store2, "sokoban", 0) == st.moves > 0
+
+
 def test_round37_room_pickers_survive_key_mashing():
     import curses
     from gamebored.games import sokoban, platformer
