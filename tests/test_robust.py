@@ -905,3 +905,61 @@ def test_round27_tetris_ignores_bad_moves():
     st.over = False
     st.rotate_piece()  # must not crash
     assert st.move(0, 1) is False
+
+
+def test_round54_pickers_answer_help_key(monkeypatch):
+    """Round 54: '?' in Sokoban/Runner room pickers opens help, then q quits."""
+    import curses as _c
+    from gamebored import ui as ui_mod
+    from gamebored.games import sokoban as sk
+    from gamebored.games import platformer as pf
+    from gamebored import progress as _pg
+    import gamebored.scores as _ss
+
+    shown = []
+    monkeypatch.setattr(ui_mod, "show_help_overlay",
+                        lambda stdscr, gid: shown.append(gid))
+
+    class PickerWin:
+        def __init__(self, keys):
+            self.keys = list(keys)
+            self.lines = []
+
+        def getmaxyx(self):
+            return (24, 80)
+
+        def clear(self):
+            pass
+
+        def refresh(self):
+            pass
+
+        def timeout(self, delay):
+            pass
+
+        def keypad(self, flag):
+            pass
+
+        def addstr(self, y, x, text, attr=0):
+            self.lines.append(text)
+
+        def addch(self, y, x, ch, attr=0):
+            self.lines.append(ch)
+
+        def getch(self):
+            return self.keys.pop(0) if self.keys else ord("q")
+
+    for mod, gid in ((sk, "sokoban"), (pf, "platformer")):
+        win = PickerWin([ord("?"), ord("q")])
+        calls = {"n": 0}
+
+        def fake_scores(path=None):
+            calls["n"] += 1
+            raise AssertionError("picker must not touch real scores")
+
+        try:
+            res = mod.select_level(win, _ss, {})
+        except AssertionError:
+            raise
+        assert res is None
+    assert sorted(shown) == ["platformer", "sokoban"], shown

@@ -729,6 +729,8 @@ def select_level(stdscr, score_store, progress):
                     return ("endless", None)
             else:
                 return ("level", min(sel, unlocked))
+        elif key in ui.HELP_KEYS:
+            ui.show_help_overlay(stdscr, GAME_ID)
         elif key == curses.KEY_RESIZE:
             continue
 
