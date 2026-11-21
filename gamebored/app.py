@@ -203,6 +203,21 @@ def menu_loop(stdscr):
     ui.init_colors()
     score_store = scores_mod.load()
     entries = build_entries()
+    if not entries:
+        try:
+            stdscr.clear()
+        except curses.error:
+            pass
+        ui.centered(stdscr, 0, "GAMEBORED", ui.color(1) | curses.A_BOLD)
+        ui.centered(stdscr, 2, "No entries to show.", ui.color(7))
+        ui.footer(stdscr, "q quit")
+        try:
+            stdscr.refresh()
+            stdscr.timeout(-1)
+            stdscr.getch()
+        except curses.error:
+            pass
+        return
     selected = 0
     while True:
         if ui.too_small(stdscr):

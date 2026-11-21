@@ -356,6 +356,39 @@ def test_round28_menu_restores_hidden_cursor(monkeypatch):
     assert calls == [0]
 
 
+def test_round30_menu_loop_survives_empty_registry(monkeypatch):
+    import curses
+    from gamebored import app as app_mod
+    monkeypatch.setattr(app_mod, "build_entries", lambda: [])
+
+    class FakeWin:
+        def __init__(self):
+            self.keys = [ord("q")]
+
+        def getmaxyx(self):
+            return (24, 80)
+
+        def clear(self):
+            pass
+
+        def refresh(self):
+            pass
+
+        def keypad(self, flag):
+            pass
+
+        def timeout(self, delay):
+            pass
+
+        def addstr(self, y, x, text, attr=0):
+            pass
+
+        def getch(self):
+            return self.keys.pop(0) if self.keys else ord("q")
+
+    app_mod.menu_loop(FakeWin())  # must return, not raise
+
+
 def test_round29_game_over_returns_on_any_key():
     import curses
     from gamebored import ui as ui_mod
