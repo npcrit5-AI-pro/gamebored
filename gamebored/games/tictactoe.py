@@ -73,6 +73,8 @@ class TicState:
         self.message = "You are X. Good luck!"
 
     def human(self, i):
+        if not isinstance(i, int) or not 0 <= i < 9:
+            return False
         if self.board[i] or winner(self.board):
             return False
         self.board[i] = "X"

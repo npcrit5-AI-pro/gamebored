@@ -58,3 +58,12 @@ def test_round4_minesweeper_out_of_bounds_is_noop():
     assert not st.over
     st.reveal(4, 4)
     assert st.started and not st.over
+
+
+def test_round5_tictactoe_illegal_moves_rejected():
+    from gamebored.games import tictactoe
+    st = tictactoe.TicState()
+    for bad in (99, -1, None, "x", 3.5):
+        assert st.human(bad) is False
+    assert "X" not in st.board and "O" not in st.board
+    assert st.human(0) is True
