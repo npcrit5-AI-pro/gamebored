@@ -16,10 +16,21 @@ CATEGORY = "ACTION"
 UP, DOWN, LEFT, RIGHT = (0, -1), (0, 1), (-1, 0), (1, 0)
 
 
+DIRS = (UP, DOWN, LEFT, RIGHT)
+
+
 class SnakeState:
     def __init__(self, width=20, height=20, seed=None):
-        self.width = width
-        self.height = height
+        try:
+            width = int(width)
+        except (TypeError, ValueError):
+            width = 20
+        try:
+            height = int(height)
+        except (TypeError, ValueError):
+            height = 20
+        self.width = max(4, width)
+        self.height = max(4, height)
         self.rng = random.Random(seed)
         cx, cy = width // 2, height // 2
         self.snake = [(cx, cy), (cx - 1, cy), (cx - 2, cy)]
@@ -36,6 +47,8 @@ class SnakeState:
         self.food = self.rng.choice(free) if free else None
 
     def set_direction(self, d):
+        if d not in DIRS:
+            return
         dx, dy = d
         pdx, pdy = self.pending
         if (dx, dy) != (-pdx, -pdy):

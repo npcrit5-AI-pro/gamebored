@@ -275,3 +275,18 @@ def test_round16_menu_handles_empty_entries_and_bad_keys():
     assert app_mod.hotkey_index(entries, ord("1")) is not None
     hotkeys = [e["hotkey"] for e in entries]
     assert len(set(hotkeys)) == len(hotkeys), "hotkeys must stay unique"
+
+
+def test_round18_snake_rejects_bad_dimensions_and_turns():
+    from gamebored.games import snake
+    for bad in (0, -5, None):
+        st = snake.new_state(bad, bad, seed=1)
+        assert st.width >= 4 and st.height >= 4
+        assert st.step() in (True, False)
+    st = snake.new_state(6, 6, seed=1)
+    before = st.pending
+    for bad in (None, 5, "up", (9, 9), (0, 0)):
+        st.set_direction(bad)
+    assert st.pending == before
+    st.set_direction(snake.UP)
+    assert st.pending == snake.UP
