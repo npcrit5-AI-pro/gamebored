@@ -40,8 +40,9 @@ Scores live in `~/.local/share/gamebored/scores.json`.
 Games are grouped by category (ACTION / PUZZLE / CLASSIC) with a
 highlighted selection, per-game best scores translated into Bored Points,
 a combined BP total, and a bottom bar that always shows the keys. Move with
-`Up/Down` (or `j/k`), open with `Enter`, or jump straight there with a
-hotkey.
+`Up/Down` (or `j/k`), open with `Enter`, jump straight there with a
+hotkey, type `/` to filter the list, and your last pick is remembered
+next launch.
 
 | Hotkey | Entry | Controls |
 |--------|-------|----------|
@@ -57,8 +58,8 @@ hotkey.
 | 0 | Word Guess — 6 tries (1,000+ words) | Type + Enter, Backspace |
 | a | Frogger — hop across the traffic! | Arrows/WASD hop |
 | b | Simon — repeat the memory sequence | Watch, then press 1-4 |
-| c | Sokoban — push boxes onto targets (205 rooms!) | Arrows/WASD push, R restart |
-| f | Runner — run, jump, dodge, grab the exit! | Arrows/WASD move + jump |
+| c | Sokoban — push boxes onto targets (205 rooms!) | Arrows/WASD push, R restart, U undo |
+| f | Runner — run, jump, dodge, grab the exit! | Arrows/WASD move + jump, R room |
 | d | Connect Four — line up four vs the CPU | Left/Right, Space/Enter or 1-7 |
 | e | Flappy — flap through the pipes! | Space/Up flap |
 | W | Bored Wondering — search the web, keyless | Type + Enter, Up/Down pick |

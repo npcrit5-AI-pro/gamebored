@@ -20,5 +20,5 @@
           - CLASSIC -
                5  Tic-Tac-Toe   Beat the computer at X      0 0 BP
                       Combined total: 0 BP across 16 games
-       Invaders: Left/Right or A/D move | Space shoot | p pause | q menu
+   Invaders: Left/Right or A/D move | Space shoot | p pause | ? help | q menu
  Up/Down+j/k move | Enter open | 1-9,0,a-f games | W search H scores T translat
