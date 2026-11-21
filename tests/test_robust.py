@@ -20,3 +20,18 @@ def test_round1_corrupt_score_entries_never_crash():
     # sane values still pass through (floats truncated like before)
     assert scores_mod.get_entry({"snake": {"high": 12, "plays": 3, "wins": 1}},
                                 "snake") == {"high": 12, "plays": 3, "wins": 1}
+
+
+def test_round2_atomic_save_never_leaves_half_file(tmp_path):
+    import json
+    from gamebored import scores as scores_mod
+    path = str(tmp_path / "scores.json")
+    store = {}
+    scores_mod.record_play(store, "snake", 5, path=path)
+    assert not os.path.exists(path + ".tmp")
+    with open(path, encoding="utf-8") as fh:
+        assert json.load(fh)["snake"]["high"] == 5
+    # non-serializable store must not crash and must keep the old file
+    scores_mod.save({"snake": object()}, path=path)
+    with open(path, encoding="utf-8") as fh:
+        assert json.load(fh)["snake"]["high"] == 5
