@@ -338,3 +338,11 @@ def test_round23_word_answers_normalized():
     for ch in "CRANE":
         w3.type_letter(ch)
     assert w3.submit() is True and w3.won
+
+
+def test_round24_pong_ignores_bad_step_input():
+    from gamebored.games import pong
+    st = pong.PongState(width=30, height=10)
+    for bad in ("x", None, [1]):
+        st.step(bad)  # must not raise
+    st.step(999)  # must not raise

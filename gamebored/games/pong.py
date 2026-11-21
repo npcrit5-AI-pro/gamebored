@@ -34,6 +34,14 @@ class PongState:
         self.vy = 0.5 if (self.height % 2 == 0) else -0.5
 
     def step(self, player_move=0, cpu_speed=0.6):
+        try:
+            player_move = int(player_move)
+        except (TypeError, ValueError):
+            player_move = 0
+        try:
+            cpu_speed = float(cpu_speed)
+        except (TypeError, ValueError):
+            cpu_speed = 0.6
         self.player = max(self.paddle // 2,
                           min(self.height - 1 - self.paddle // 2,
                               self.player + player_move))
