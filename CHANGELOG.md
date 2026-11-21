@@ -98,6 +98,37 @@ plus 36 new), a manual `install.sh`/`uninstall.sh` round-trip verified
 with a scratch HOME, and `python3 -m gamebored --list` shows 16 games
 including Runner.
 
+- Round 40: Sokoban gains undo (`u`, 2000-step history, cleared on
+  restart) so one wrong push no longer ruins a room.
+- Round 41: Sokoban tracks fewest moves per room in `progress.json`
+  (`get_best`/`record_best`) and shows `best:N` in the HUD.
+- Round 42: the menu remembers the last picked game across sessions
+  (`_menu_last` in the scores store).
+- Round 43: menu `/` filter with a status line and empty-state handling.
+- Round 44: Runner `r` restarts the room keeping score and lives.
+- Round 45: every game's CONTROLS line advertises `? help` (8 fixed).
+- Round 46: Sokoban picker shows `(best N)` per cleared room.
+- Round 47: Runner flashes `OUCH! N lives left` for a second on a
+  non-final death.
+- Round 48: fixed the pty menu test (fresh HOME; remembered selection
+  had scrolled the asserted entry out of view).
+- Round 49: the `?` help overlay documents `/ filter`.
+- Round 50: High Scores shows per-game play counts.
+- Round 51: README documents undo/room-restart/filter; screenshots
+  regenerated for sixteen games.
+- Round 52: removed dead `ui.FOOTER_HELP`; Wondering CONTROLS says
+  `q/Esc menu`.
+- Round 53: the pause overlay headline names the game
+  (`PAUSED - <title>`), passed as TITLE by all sixteen games.
+- Round 54: Sokoban and Runner room pickers answer `?` with the help
+  overlay like every other screen.
+- Round 55: Sokoban footer says `boxes home N/M` instead of cryptic
+  `home N/M`.
+
+Final: version stays 1.4.0, full suite green (142 passed), a manual
+`install.sh`/`uninstall.sh` round-trip verified with a scratch HOME, and
+`python3 -m gamebored --list` shows 16 games including Runner.
+
 ## v1.2.0 — polished menu, Bored Wondering search, pause/help everywhere
 ## v1.1.0 — fifteen games, bigger word lists, Bored Points Score Translator
 ## v1.0.0 — colorful curses arcade with 10 games, installer, tests
