@@ -1,6 +1,14 @@
 # GameBored Changelog
 
-## v1.4.0 — 34 improvement rounds
+## v1.4.0 — 39 improvement rounds (on top of v1.3.0)
+
+Every v1.3.0 feature is kept: 16 games including Runner (60 rooms,
+solver-verified endless), Sokoban with all 205 rooms, room pickers with
+saved `progress.json`, solver-verified endless modes, Bored Wondering,
+High Scores, Score Translator, `p` pause / `?` help / `q` menu in every
+game, stdlib-only curses UI at 80x24, and `install.sh`/`uninstall.sh`
+with no sudo. Full suite: 129 passing (`python3 -m pytest tests -q`:
+all 93 v1.3.0 tests plus 36 new).
 
 Every existing feature is kept: 15 games, Bored Wondering keyless search,
 High Scores with Bored Points, the Score Translator, categorized menu,
@@ -25,7 +33,8 @@ tiny/odd terminals, no-color, offline search):
 - Round 6: Hangman ignores non-string and multi-letter guesses.
 - Round 7: 2048 ignores bad directions and malformed boards instead of
   raising `ValueError`.
-- Round 8: clamp the Sokoban start room into the valid range.
+- Round 8: clamp the Sokoban start room into the valid range (kept
+  through the v1.3.0 rebase: all 205 rooms intact).
 - Round 9: `safe_addstr` and `safe_addch` tolerate junk input (non-string
   text, out-of-range codes) and catch `TypeError`/`ValueError` too.
 - Round 10: cap search responses at 2 MiB per source and tolerate
@@ -49,10 +58,10 @@ tiny/odd terminals, no-color, offline search):
   to corrupt the score type).
 - Round 27: Tetris ignores bad moves after game over / with no piece.
 - Round 30: menu loop exits cleanly with an empty registry.
-- Round 33: lock in headless draw fuzz at odd terminal sizes (all 15
-  games at 80x24 down to 20x6).
+- Round 33: lock in headless draw fuzz at odd terminal sizes (all 16
+  games at 80x24 down to 20x6, Runner included).
 - Round 34: screenshot capture renders every screen (menu, wondering,
-  help, all 15 games) as a regression test.
+  help, all 16 games) as a regression test.
 
 Usability and polish:
 
@@ -73,11 +82,21 @@ Installer and tests:
   (`tests/test_install.py`).
 - Round 32: high scores survive uninstall and reinstall — `uninstall.sh`
   backs up `scores.json`, `install.sh` restores it.
+- Round 35: harden `progress.json` save/load against corruption —
+  atomic saves, dict guards, junk levels can never skip ahead, locked
+  endless stays locked.
+- Round 36: Runner ignores junk rows, steps, and levels (bad `new_state`
+  levels clamp into the 60-room set).
+- Round 37: Sokoban and Runner room pickers survive key mashing and junk
+  progress (600-key fuzz each, locked endless stays unpickable).
+- Round 38: CLI `--list` covers all sixteen games; Runner has a BP rate.
+- Round 39: refresh the menu screenshot for sixteen games and v1.4.0.
 
-Final: version bumped to 1.4.0 (`gamebored/__init__.py`, search
-`USER_AGENT`, README, screenshots), full suite green (113 passed), and a
-manual `install.sh`/`uninstall.sh` round-trip verified with a scratch
-HOME.
+Final: version stays 1.4.0 (`gamebored/__init__.py`, search `USER_AGENT`,
+README, screenshots), full suite green (129 passed: all 93 v1.3.0 tests
+plus 36 new), a manual `install.sh`/`uninstall.sh` round-trip verified
+with a scratch HOME, and `python3 -m gamebored --list` shows 16 games
+including Runner.
 
 ## v1.2.0 — polished menu, Bored Wondering search, pause/help everywhere
 ## v1.1.0 — fifteen games, bigger word lists, Bored Points Score Translator
