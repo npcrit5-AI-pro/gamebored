@@ -242,7 +242,7 @@ def build_help_lines(game_mods):
         "MENU",
         "  Up/Down (or j/k) moves - Enter opens the highlighted entry.",
         "  Hotkeys: 1-9,0,a-f games - W search - H scores - T translator.",
-        "  ? shows this help - q/Esc quits.",
+        "  / filters the menu - ? shows this help - q/Esc quits.",
         "",
         "WHILE PLAYING",
         "  Arrows/WASD play - p pauses - ? helps - q/Esc back to menu.",

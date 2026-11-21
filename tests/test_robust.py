@@ -985,3 +985,10 @@ def test_round57_picker_footers_advertise_help():
     from gamebored.games import sokoban, platformer
     assert "? help" in inspect.getsource(sokoban.select_level)
     assert "? help" in inspect.getsource(platformer.select_level)
+
+
+def test_round58_help_screen_documents_filter():
+    """Round 58: the full Help screen documents '/ filter'."""
+    from gamebored import extras
+    lines = extras.build_help_lines([])
+    assert any("/ filter" in ln or "/ filters" in ln for ln in lines), lines
