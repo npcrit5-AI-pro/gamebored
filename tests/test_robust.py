@@ -992,3 +992,12 @@ def test_round58_help_screen_documents_filter():
     from gamebored import extras
     lines = extras.build_help_lines([])
     assert any("/ filter" in ln or "/ filters" in ln for ln in lines), lines
+
+
+def test_round59_runner_clear_toast_uses_room_bonus():
+    """Round 59: room-clear toast names the real ROOM_BONUS, shows 1.2s."""
+    import inspect
+    from gamebored.games import platformer
+    src = inspect.getsource(platformer.play)
+    assert "clear_until = time.time() + 1.2" in src
+    assert '" CLEAR! +%d" % ROOM_BONUS' in src

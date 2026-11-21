@@ -760,6 +760,7 @@ def play(stdscr, score_store):
         level_idx = idx
     last = time.time()
     hurt_until = 0.0  # timestamp until which "OUCH!" shows after a death
+    clear_until = 0.0  # timestamp until which "CLEAR!" shows
     while True:
         if ui.too_small(stdscr):
             ui.show_too_small(stdscr)
@@ -842,6 +843,7 @@ def play(stdscr, score_store):
                     endless_n = 1
                 else:
                     level_idx += 1
+                    clear_until = time.time() + 1.2
                     st = RunState(LEVELS[level_idx], score=st.score)
                 last = time.time()
         if st.over and not st.won:
@@ -871,7 +873,10 @@ def play(stdscr, score_store):
             ouch = " OUCH! %d %s left" % (
                 st.lives, "life" if st.lives == 1 else "lives") \
                 if time.time() < hurt_until else ""
-            draw(stdscr, st, room_label(level_idx, total, st) + ouch)
+            clear = " CLEAR! +%d" % ROOM_BONUS \
+                if time.time() < clear_until else ""
+            draw(stdscr, st, room_label(level_idx, total, st) + ouch +
+                 clear)
         ui.game_footer(stdscr, CONTROLS + " | room score %d" % st.score)
         try:
             stdscr.refresh()
