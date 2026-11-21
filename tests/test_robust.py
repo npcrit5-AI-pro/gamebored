@@ -542,6 +542,30 @@ def test_round41_sokoban_best_moves_tracked(tmp_path):
     assert progress_mod.get_best(store2, "sokoban", 0) == st.moves > 0
 
 
+def test_round42_menu_remembers_last_pick(tmp_path):
+    from gamebored import app as app_mod
+    entries = app_mod.build_entries()
+    assert app_mod._restore_selected({}, entries) == 0
+    assert app_mod._restore_selected({"_menu_last": "nope"}, entries) == 0
+    assert app_mod._restore_selected(None, entries) == 0
+    assert app_mod._restore_selected({"_menu_last": 5}, entries) == 0
+    store = {}
+    target = next(i for i, e in enumerate(entries)
+                  if e.get("kind") == "game"
+                  and e["mod"].GAME_ID == "platformer")
+    app_mod._remember_selected(store, entries, target)
+    assert store["_menu_last"] == "game:platformer"
+    assert app_mod._restore_selected(store, entries) == target
+    # corrupt store shapes never raise, saves still work
+    app_mod._remember_selected([], entries, target)
+    app_mod._remember_selected(store, [], target)
+    path = str(tmp_path / "scores.json")
+    from gamebored import scores as scores_mod
+    scores_mod.save(store, path)
+    reloaded = scores_mod.load(path)
+    assert app_mod._restore_selected(reloaded, entries) == target
+
+
 def test_round37_room_pickers_survive_key_mashing():
     import curses
     from gamebored.games import sokoban, platformer

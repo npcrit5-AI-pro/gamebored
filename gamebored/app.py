@@ -187,6 +187,46 @@ def hotkey_index(entries, key):
     return None
 
 
+LAST_KEY = "_menu_last"
+
+
+def _entry_id(entry):
+    """Stable id for a menu entry: the game id, or kind:title for extras."""
+    try:
+        if entry.get("kind") == "game":
+            return "game:%s" % entry["mod"].GAME_ID
+        return "%s:%s" % (entry.get("kind"), entry.get("title"))
+    except Exception:
+        return ""
+
+
+def _restore_selected(score_store, entries):
+    """Index of the entry picked last time, or 0 when unknown."""
+    want = None
+    try:
+        if isinstance(score_store, dict):
+            want = score_store.get(LAST_KEY)
+    except Exception:
+        want = None
+    if not isinstance(want, str) or not want:
+        return 0
+    for i, entry in enumerate(entries or []):
+        if _entry_id(entry) == want:
+            return i
+    return 0
+
+
+def _remember_selected(score_store, entries, idx):
+    """Persist the picked entry id; never breaks saving."""
+    if not isinstance(score_store, dict) or not entries:
+        return
+    try:
+        score_store[LAST_KEY] = _entry_id(entries[idx % len(entries)])
+        scores_mod.save(score_store)
+    except Exception:
+        pass
+
+
 def menu_loop(stdscr):
     try:
         curses.curs_set(0)
@@ -218,7 +258,7 @@ def menu_loop(stdscr):
         except curses.error:
             pass
         return
-    selected = 0
+    selected = _restore_selected(score_store, entries)
     while True:
         if ui.too_small(stdscr):
             ui.show_too_small(stdscr)
@@ -243,6 +283,7 @@ def menu_loop(stdscr):
         elif key == curses.KEY_DOWN or key == ord("j"):
             selected = (selected + 1) % len(entries)
         elif key in (10, 13, curses.KEY_ENTER, ord(" ")):
+            _remember_selected(score_store, entries, selected)
             launch_entry(stdscr, entries[selected], score_store)
             _hide_cursor(stdscr)
             score_store = scores_mod.load()
@@ -252,6 +293,7 @@ def menu_loop(stdscr):
             idx = hotkey_index(entries, key)
             if idx is not None:
                 selected = idx
+                _remember_selected(score_store, entries, selected)
                 launch_entry(stdscr, entries[idx], score_store)
                 _hide_cursor(stdscr)
                 score_store = scores_mod.load()
