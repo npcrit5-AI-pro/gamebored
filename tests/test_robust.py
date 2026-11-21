@@ -323,6 +323,19 @@ def test_round22_cli_flags_do_not_launch_curses(capsys):
     assert "Usage" in capsys.readouterr().out
 
 
+def test_round38_list_shows_sixteen_games_including_runner(capsys):
+    from gamebored import __main__ as main_mod
+    from gamebored.games import GAMES
+    assert main_mod.main(["--list"]) == 0
+    out = capsys.readouterr().out
+    assert len(GAMES) == 16
+    assert "Runner" in out
+    for mod in GAMES:
+        assert mod.TITLE in out
+    from gamebored import translator as translator_mod
+    assert translator_mod.rate_for("platformer") > 0
+
+
 def test_round23_word_answers_normalized():
     from gamebored.games import hangman, wordle
     st = hangman.HangState(word="apple")
