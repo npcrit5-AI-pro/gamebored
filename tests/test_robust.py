@@ -242,6 +242,37 @@ def test_round14_high_scores_scroll_clamps():
     extras_mod.show_high_scores(win2, {"snake": {"high": 9, "plays": 2}})
 
 
+def test_round50_high_scores_show_play_counts():
+    import curses
+    from gamebored import extras as extras_mod
+
+    class FakeWin:
+        def __init__(self):
+            self.lines = []
+
+        def getmaxyx(self):
+            return (24, 80)
+
+        def clear(self):
+            pass
+
+        def refresh(self):
+            pass
+
+        def addstr(self, y, x, text, attr=0):
+            self.lines.append(text)
+
+        def getch(self):
+            return ord("q")
+
+    win = FakeWin()
+    extras_mod.show_high_scores(
+        win, {"snake": {"high": 9, "plays": 2},
+              "pong": {"high": 200, "plays": 1}})
+    assert any("9 " in ln and "2 plays" in ln for ln in win.lines), win.lines
+    assert any("1 play" in ln and "1 plays" not in ln for ln in win.lines)
+
+
 def test_round15_word_loader_ignores_garbage_lines(tmp_path):
     from gamebored import words as words_mod
     path = tmp_path / "words.txt"

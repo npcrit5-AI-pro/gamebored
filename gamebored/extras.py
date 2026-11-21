@@ -52,10 +52,11 @@ def show_high_scores(win, score_store):
                 if idx >= len(rows):
                     break
                 title, high, bp, plays = rows[idx]
-                line = "%-12s  best %-8d -> %8s BP" % (
-                    title[:12], high, _commas(bp))
+                line = "%-12s  best %-7d -> %8s BP %4d %s" % (
+                    title[:12], high, _commas(bp), plays,
+                    "play" if plays == 1 else "plays")
                 attr = ui.color(2) | curses.A_BOLD if high else ui.color(7)
-                ui.safe_addstr(win, y + i, max(2, (w - 44) // 2),
+                ui.safe_addstr(win, y + i, max(2, (w - 56) // 2),
                                line[: w - 4], attr)
             if top + visible < len(rows):
                 ui.safe_addstr(win, h - 2, w - 14, "(more: Up/Down)",
