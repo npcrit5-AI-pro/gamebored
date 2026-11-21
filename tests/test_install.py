@@ -62,3 +62,23 @@ def test_scores_survive_uninstall_reinstall(tmp_path):
     assert _run(INSTALL, home).returncode == 0
     with open(os.path.join(dest, "scores.json")) as fh:
         assert '"high": 9' in fh.read()
+
+
+def test_progress_survives_uninstall_reinstall(tmp_path):
+    """Round 63: progress.json (unlocked rooms, bests) survives reinstall."""
+    if os.name != "posix":
+        pytest.skip("installer targets POSIX shells")
+    home = str(tmp_path / "home3")
+    os.makedirs(home)
+    assert _run(INSTALL, home).returncode == 0
+    dest = os.path.join(home, ".local", "share", "gamebored")
+    with open(os.path.join(dest, "progress.json"), "w") as fh:
+        fh.write('{"sokoban": {"unlocked": 5}}')
+    assert _run(UNINSTALL, home).returncode == 0
+    assert not os.path.exists(dest)
+    backup = os.path.join(home, ".local", "share",
+                          "gamebored-progress-backup.json")
+    assert os.path.isfile(backup)
+    assert _run(INSTALL, home).returncode == 0
+    with open(os.path.join(dest, "progress.json")) as fh:
+        assert '"unlocked": 5' in fh.read()

@@ -30,6 +30,10 @@ if [[ -f "$HOME/.local/share/gamebored-scores-backup.json" && ! -f "$DEST/scores
   cp "$HOME/.local/share/gamebored-scores-backup.json" "$DEST/scores.json"
   echo "High scores restored from backup."
 fi
+if [[ -f "$HOME/.local/share/gamebored-progress-backup.json" && ! -f "$DEST/progress.json" ]]; then
+  cp "$HOME/.local/share/gamebored-progress-backup.json" "$DEST/progress.json"
+  echo "Room progress restored from backup."
+fi
 # Drop caches if the repo shipped any
 find "$DEST" -name "__pycache__" -type d -prune -exec rm -rf {} + 2>/dev/null || true
 

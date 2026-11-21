@@ -5,11 +5,16 @@ set -euo pipefail
 
 DEST="$HOME/.local/share/gamebored"
 BACKUP="$HOME/.local/share/gamebored-scores-backup.json"
+PROGRESS_BACKUP="$HOME/.local/share/gamebored-progress-backup.json"
 BIN_DIR="$HOME/.local/bin"
 
 if [[ -f "$DEST/scores.json" ]]; then
   cp "$DEST/scores.json" "$BACKUP"
   echo "High scores backed up to $BACKUP"
+fi
+if [[ -f "$DEST/progress.json" ]]; then
+  cp "$DEST/progress.json" "$PROGRESS_BACKUP"
+  echo "Room progress backed up to $PROGRESS_BACKUP"
 fi
 
 rm -f "$BIN_DIR/GameBored" "$BIN_DIR/gamebored"
