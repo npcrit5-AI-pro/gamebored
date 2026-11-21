@@ -266,7 +266,7 @@ def pause_overlay(win, title="PAUSED"):
 
 HELP_LINES = [
     ("Move / pick", "Up/Down arrows (or j/k), Enter to open"),
-    ("Hotkeys", "1-9,0,a-f games - W search - H scores - T points - ? this help"),
+    ("Hotkeys", "1-9,0,a-f games - / filter - W search - H scores - T points - ? help"),
     ("In every game", "Arrows/WASD play - p pause - ? help - q/Esc menu"),
     ("Scores", "Best score per game is saved automatically"),
     ("Tiny window?", "Make it 80x24 or bigger; nothing breaks"),
