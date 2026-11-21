@@ -356,3 +356,13 @@ def test_round25_breakout_ignores_bad_step_input():
     for _ in range(200):
         st.step(1)
     assert st.score >= 0
+
+
+def test_round26_invaders_level_is_always_sane():
+    from gamebored.games import invaders
+    for bad in ("x", None, 0, -3):
+        st = invaders.InvaderState(width=50, height=18, seed=1, level=bad)
+        assert st.level >= 1
+        st.score += 10 * st.level
+        assert isinstance(st.score, int)
+        st.step()

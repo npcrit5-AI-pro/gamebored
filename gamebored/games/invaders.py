@@ -21,7 +21,11 @@ class InvaderState:
         self.width = width
         self.height = height
         self.rng = random.Random(seed)
-        self.level = level
+        try:
+            level = int(level)
+        except (TypeError, ValueError):
+            level = 1
+        self.level = max(1, level)
         self.ship_x = width // 2
         self.aliens = set()
         self.alien_dir = 1
