@@ -45,14 +45,25 @@ def save(scores, path=SCORES_FILE):
         pass
 
 
+def _safe_int(value):
+    """Coerce anything to a non-negative int; never raises."""
+    try:
+        value = int(value)
+    except (TypeError, ValueError, OverflowError):
+        return 0
+    if value != value:  # NaN guard (int(float('nan')) raises, but be safe)
+        return 0
+    return max(0, value)
+
+
 def get_entry(scores, game_id):
-    entry = scores.get(game_id)
+    entry = scores.get(game_id) if isinstance(scores, dict) else None
     if not isinstance(entry, dict):
         return {"high": 0, "plays": 0, "wins": 0}
     return {
-        "high": int(entry.get("high", 0) or 0),
-        "plays": int(entry.get("plays", 0) or 0),
-        "wins": int(entry.get("wins", 0) or 0),
+        "high": _safe_int(entry.get("high", 0) or 0),
+        "plays": _safe_int(entry.get("plays", 0) or 0),
+        "wins": _safe_int(entry.get("wins", 0) or 0),
     }
 
 
