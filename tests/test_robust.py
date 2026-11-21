@@ -248,3 +248,30 @@ def test_round15_word_loader_ignores_garbage_lines(tmp_path):
     words = words_mod._read_word_file(str(path))
     assert words == ["apple", "avocado", "x"], words
     assert words_mod._read_word_file(str(tmp_path / "missing.txt")) == []
+
+
+def test_round16_menu_handles_empty_entries_and_bad_keys():
+    from gamebored import app as app_mod
+
+    class FakeWin:
+        def getmaxyx(self):
+            return (24, 80)
+
+        def clear(self):
+            pass
+
+        def refresh(self):
+            pass
+
+        def addstr(self, y, x, text, attr=0):
+            pass
+
+    app_mod.draw_menu(FakeWin(), 0, {}, entries=[])
+    entries = app_mod.build_entries()
+    assert app_mod.hotkey_index(entries, None) is None
+    assert app_mod.hotkey_index(entries, "1") is None
+    assert app_mod.hotkey_index(entries, -1) is None
+    assert app_mod.hotkey_index(entries, 10**6) is None
+    assert app_mod.hotkey_index(entries, ord("1")) is not None
+    hotkeys = [e["hotkey"] for e in entries]
+    assert len(set(hotkeys)) == len(hotkeys), "hotkeys must stay unique"

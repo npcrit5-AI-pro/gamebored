@@ -84,6 +84,16 @@ def _commas(n):
 def draw_menu(win, selected, score_store, entries=None):
     if entries is None:
         entries = build_entries()
+    if not entries:
+        try:
+            win.clear()
+            ui.centered(win, 0, "GAMEBORED", ui.color(1) | curses.A_BOLD)
+            ui.centered(win, 2, "No entries to show.", ui.color(7))
+            ui.footer(win, "q quit")
+            win.refresh()
+        except curses.error:
+            pass
+        return
     try:
         win.clear()
     except curses.error:
@@ -166,6 +176,8 @@ def draw_menu(win, selected, score_store, entries=None):
 
 def hotkey_index(entries, key):
     """Map a pressed key to an entry index, or None."""
+    if not isinstance(key, int):
+        return None
     if 0 <= key <= 255:
         ch = chr(key)
         for i, e in enumerate(entries):
