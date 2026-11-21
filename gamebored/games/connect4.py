@@ -74,25 +74,11 @@ class ConnectState:
 
     def ai_move(self):
         """Simple CPU: win if it can, block if it must, else near-center."""
-        # winning move
-        for c in range(COLS):
-            trial = self.board[:]
-            if _drop_on(trial, c, "O") and self.check(trial) == "O":
-                self.drop(c, "O")
-                return c
-        # block the player's win
-        for c in range(COLS):
-            trial = self.board[:]
-            if _drop_on(trial, c, "X") and self.check(trial) == "X":
-                self.drop(c, "O")
-                return c
-        order = [3, 2, 4, 1, 5, 0, 6]
-        free = [c for c in order if self.cell(0, c) == ""]
-        if not free:
+        col, _hard = choose_move(self.board, self.rng)
+        if col is None:
             return None
-        choice = self.rng.choice(free[:3])
-        self.drop(choice, "O")
-        return choice
+        self.drop(col, "O")
+        return col
 
 
 def _drop_on(board, col, mark):
@@ -101,6 +87,61 @@ def _drop_on(board, col, mark):
             board[r * COLS + col] = mark
             return True
     return False
+
+
+def choose_move(board, rng):
+    """Pick the CPU's column: (col, hard). hard is True for a win/block.
+
+    Pure function (works on a copy): the UI thinks for a beat before the
+    caller drops the disc. Returns (None, False) when no column is free.
+    """
+    # winning move
+    for c in range(COLS):
+        trial = list(board)
+        if _drop_on(trial, c, "O") and ConnectState.check(trial) == "O":
+            return c, True
+    # block the player's win
+    for c in range(COLS):
+        trial = list(board)
+        if _drop_on(trial, c, "X") and ConnectState.check(trial) == "X":
+            return c, True
+    order = [3, 2, 4, 1, 5, 0, 6]
+    free = [c for c in order if board[c] == ""]
+    if not free:
+        return None, False
+    try:
+        return rng.choice(free[:3]), False
+    except Exception:
+        return free[0], False
+
+
+def _human_drop(stdscr, st, col):
+    """Drop the human disc, think like a person, then drop the CPU disc.
+
+    Returns 'ok', 'full' (column was full), or 'quit' (user bailed out
+    during the think pause; the human disc stays, the CPU never answers).
+    """
+    from .. import cpu as cpu_mod
+    from .. import settings as settings_mod
+    if st.drop(col, "X") is None:
+        return "full"
+    if st.result():
+        return "ok"
+    cpu_col, hard = choose_move(st.board, st.rng)
+    if cpu_col is None:
+        return "ok"
+    draw(stdscr, st)
+    ui.centered(stdscr, 3 + ROWS + 2, "CPU is thinking...", ui.color(3))
+    ui.game_footer(stdscr, CONTROLS)
+    try:
+        stdscr.refresh()
+    except curses.error:
+        pass
+    if cpu_mod.think(stdscr, difficulty=1.0 if hard else 0.2,
+                     settings=settings_mod.load()) == "quit":
+        return "quit"
+    st.drop(cpu_col, "O")
+    return "ok"
 
 
 def new_state(seed=None):
@@ -199,18 +240,14 @@ def play(stdscr, score_store):
         elif key == curses.KEY_RIGHT:
             st.cursor = (st.cursor + 1) % COLS
         elif key in (10, 13, curses.KEY_ENTER, ord(" ")):
-            col = st.cursor
-            if st.drop(col, "X") is None:
-                message = "Column full: pick another!"
-                continue
-            if not st.result():
-                st.ai_move()
-            message = "Your move!"
+            outcome = _human_drop(stdscr, st, st.cursor)
+            if outcome == "quit":
+                return
+            message = ("Column full: pick another!" if outcome == "full"
+                       else "Your move!")
         elif ord("1") <= key <= ord("7"):
-            col = key - ord("1")
-            if st.drop(col, "X") is None:
-                message = "Column full: pick another!"
-                continue
-            if not st.result():
-                st.ai_move()
-            message = "Your move!"
+            outcome = _human_drop(stdscr, st, key - ord("1"))
+            if outcome == "quit":
+                return
+            message = ("Column full: pick another!" if outcome == "full"
+                       else "Your move!")

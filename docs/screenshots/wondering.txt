@@ -1,16 +1,18 @@
                                 BORED WONDERING
                        the keyless corner of the internet
   Ask: python_
-  3 results for 'python' (Enter opens)
-  > [WIKI] Python (programming language)
+   All   Wiki   DDG   HN   Dict   Books
+  3 results for 'python' (Enter reads)
+  > [Wiki] Python (programming language)
     Python is a high-level, general-purpose programming language.
+
+
     https://en.wikipedia.org/wiki/Python_(programming_language)
-    [DUCK] Welcome to Python.org
+    [DDG] Welcome to Python.org
     The official home of the Python Programming Language.
+
+
     https://www.python.org/
-    [HACK] Uv is the best thing to happen to Python
-    by todsacerdoti - 312 points
-    https://news.ycombinator.com/item?id=12345678
 
 
 
@@ -18,7 +20,5 @@
 
 
 
-
-
-
- Type + Enter search | Up/Down pick | Enter open | Esc menu  |  p pause | ? hel
+                                                              page 1/2 (Up/Down)
+ Type+Enter search | Up/Down pick | Left/Right tab | Enter read | Esc menu  |

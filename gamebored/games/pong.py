@@ -1,9 +1,13 @@
 """Pong vs the computer. First to 5 wins."""
 
 import curses
+import random
 import time
+from collections import deque
 
+from .. import cpu as cpu_mod
 from .. import scores as scores_mod
+from .. import settings as settings_mod
 from .. import ui
 
 TITLE = "Pong"
@@ -26,6 +30,15 @@ class PongState:
         self.cpu_score = 0
         self.over = False
         self.won = False
+        # Human-like reaction: the CPU chases a delayed, slightly noisy
+        # memory of the ball instead of tracking it perfectly. Turn
+        # humanlike off (Settings) for the old frame-perfect tracking.
+        self.humanlike = True
+        self.react_every = 4
+        self.rng = random.Random()
+        self._tick = 0
+        self._target = float(self.cpu)
+        self._seen = deque(maxlen=8)
 
     def reset(self, direction=1):
         self.bx = self.width // 2
@@ -45,8 +58,9 @@ class PongState:
         self.player = max(self.paddle // 2,
                           min(self.height - 1 - self.paddle // 2,
                               self.player + player_move))
-        # CPU tracks the ball with limited speed
-        if self.cpu < self.by:
+        if self.humanlike:
+            self._cpu_react(cpu_speed)
+        elif self.cpu < self.by:
             self.cpu = min(self.cpu + cpu_speed, self.height - 1)
         elif self.cpu > self.by:
             self.cpu = max(self.cpu - cpu_speed, 0)
@@ -79,6 +93,32 @@ class PongState:
             self._check_end()
             if not self.over:
                 self.reset(-1)
+
+    def _cpu_react(self, cpu_speed):
+        """Move the CPU paddle toward a stale, noisy memory of the ball."""
+        try:
+            self._seen.append(float(self.by))
+        except (TypeError, ValueError):
+            pass
+        self._tick += 1
+        try:
+            every = max(1, int(self.react_every))
+        except (TypeError, ValueError):
+            every = 4
+        if self._tick % every == 0 or not self._seen:
+            delayed = self._seen[0] if self._seen else float(self.by)
+            try:
+                wobble = self.rng.uniform(-0.9, 0.9)
+            except Exception:
+                wobble = 0.0
+            self._target = delayed + wobble
+        # dead zone: close enough counts as "got it", like a person
+        if abs(self._target - self.cpu) < 0.5:
+            return
+        if self.cpu < self._target:
+            self.cpu = min(self.cpu + cpu_speed, self.height - 1)
+        elif self.cpu > self._target:
+            self.cpu = max(self.cpu - cpu_speed, 0)
 
     def _check_end(self):
         if self.player_score >= WIN_SCORE:
@@ -117,6 +157,9 @@ def play(stdscr, score_store):
     except curses.error:
         pass
     st = PongState()
+    settings = settings_mod.load()
+    st.humanlike = not (cpu_mod.env_disabled()
+                        or cpu_mod.settings_disabled(settings))
     player_move = 0
     last = time.time()
     while True:

@@ -19,6 +19,21 @@ PAUSE_KEYS = (ord("p"), ord("P"))
 HELP_KEYS = (ord("?"),)
 GAME_FOOTER_SUFFIX = "p pause | ? help | q menu"
 
+_MONO = False
+
+
+def set_mono(flag):
+    """Force monochrome output (Settings 'mono' theme). Never raises."""
+    global _MONO
+    try:
+        _MONO = bool(flag)
+    except Exception:
+        _MONO = False
+
+
+def mono():
+    return bool(_MONO)
+
 
 def init_colors():
     """Set up color pairs. Safe to call when colors are unsupported."""
@@ -62,10 +77,44 @@ def has_color():
 
 
 def color(num):
+    if _MONO:
+        return 0
     try:
         return curses.color_pair(num)
     except curses.error:
         return 0
+
+
+_THEME_OVERRIDES = {
+    # theme: {pair: (fg_name, bg_name)} applied on top of init_colors()
+    "midnight": {1: ("MAGENTA", None), 2: ("CYAN", None),
+                 3: ("WHITE", None), 6: ("CYAN", None)},
+    "forest": {1: ("GREEN", None), 2: ("YELLOW", None),
+               4: ("GREEN", None), 5: ("GREEN", None)},
+}
+
+
+def apply_theme(name):
+    """Apply a Settings color theme. Never raises; mono disables color."""
+    set_mono(name == "mono")
+    init_colors()
+    if not name or name in ("default", "mono"):
+        return
+    overrides = _THEME_OVERRIDES.get(name)
+    if not overrides:
+        return
+    try:
+        if not curses.has_colors():
+            return
+    except curses.error:
+        return
+    for pair, (fg_name, bg_name) in overrides.items():
+        try:
+            fg = getattr(curses, "COLOR_" + fg_name, -1)
+            bg = getattr(curses, "COLOR_" + bg_name) if bg_name else -1
+            curses.init_pair(pair, fg, bg)
+        except curses.error:
+            pass
 
 
 def safe_addstr(win, y, x, text, attr=0):

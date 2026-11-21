@@ -1,5 +1,74 @@
 # GameBored Changelog
 
+## v1.5.0 — GameBored OS
+
+The menu is now a tiny desktop, the computer opponents feel human, and
+Bored Wondering reads you the whole story.
+
+Desktop OS (`gamebored/app.py`, `gamebored/ui.py`):
+
+- Top bar (`GameBored OS`, live clock, BP total), grid of ASCII app-icon
+  tiles with names, bottom status bar with key hints; arrows move
+  (up/down/left/right), `Enter` opens, `Esc`/`q` backs out.
+- Groups: ACTION / PUZZLE / CLASSIC games, EXPLORE, new TOOLS
+  (Notes/Calculator/Clock/Calendar/To-do) and SYSTEM (Settings/About).
+- Short skippable boot splash (off in Settings or `GAMEBORED_NO_SPLASH=1`,
+  skipped when stdout is not a tty so tests stay clean).
+- `/` filters every app by name (the search launcher); last selection is
+  remembered across launches via the existing `_menu_last` mechanism.
+- Narrow terminals (< 70 cols) fall back to the classic list layout; tiny
+  terminals still get the friendly "make the window bigger" screen;
+  selection uses reverse video so monochrome terminals keep working.
+
+New apps (all stdlib, offline, atomic saves under the data dir):
+
+- Notes (`gamebored/notes.py`): create/list/open/edit/rename/delete with a
+  confirm dialog; multi-line editor (arrows, backspace, enter, home/end)
+  with autosave; notes are `.txt` files in `notes/`.
+- Calculator (`gamebored/calc.py`): safe AST-based eval (no `eval()`),
+  `+ - * / // % **` and parentheses, history in `calc.json`.
+- Clock (`gamebored/clockapp.py`): wall clock, stopwatch, countdown timer
+  with `1/2/3` modes, Space start/stop, beeps on finish.
+- Calendar (`gamebored/calendarapp.py`): month grid, arrows move the day
+  (across month borders), PgUp/PgDn change months, `t` jumps to today.
+- To-do (`gamebored/todo.py`): add, check off, delete; `todos.json`.
+- Settings (`gamebored/settings.py` + screen): color theme
+  (default/midnight/forest/mono), CPU think pause on/off + speed
+  (relaxed/normal/brisk), boot splash on/off; `settings.json`.
+- About (`gamebored/sysinfo.py`): version, games/apps count, data-dir
+  storage used, terminal info.
+
+Human CPU opponents (`gamebored/cpu.py`): every computer opponent
+(Tic-Tac-Toe, Connect Four, Pong) now pauses with an animated
+`CPU is thinking...` indicator — 0.4–1.5s randomized, longer for tense
+positions (endgame boards, winning/blocking replies), UI stays responsive
+(`q`/`Esc` aborts instantly), Pong's paddle chases a stale noisy memory
+of the ball with a dead zone instead of tracking perfectly. Configurable
+in Settings; fully disabled via `GAMEBORED_NO_CPU_DELAY=1` for fast tests.
+
+Bored Wondering reader (`gamebored/search.py`, `gamebored/wondering.py`):
+
+- More results per source (up to 12) with long wrapped multi-line
+  summaries; two new keyless sources (Wiktionary, Open Library).
+- `Enter` opens a full-screen scrollable reader: complete Wikipedia
+  article text (extracts API, section headings), HN story plus top
+  comments (Algolia items API), full DDG abstract + infobox facts +
+  related topics, Open Library descriptions/subjects.
+- Source tabs (All/Wiki/DDG/HN/Dict/Books) on Left/Right, animated
+  loading screen with cancel, friendly offline errors, recent-query cache
+  (persisted `wonder_cache.json`, "cached" badge), `n` opens the next
+  result, `/` finds text inside the reader.
+
+Also: `install.sh`/`uninstall.sh` now preserve notes, to-dos, calculator
+history, the search cache, and settings (not just scores/progress);
+`--list` shows games + apps; version 1.5.0 (`__init__.py`, search
+`USER_AGENT`, README, screenshots).
+
+Full suite: 200+ passing (`python3 -m pytest tests -q`), including 47 new
+`tests/test_v15.py` tests, plus a manual `install.sh`/`uninstall.sh`
+round-trip verified with a scratch HOME, and `python3 -m gamebored --list`
+showing 16 games + 11 apps.
+
 ## v1.4.0 — 39 improvement rounds (on top of v1.3.0)
 
 Every v1.3.0 feature is kept: 16 games including Runner (60 rooms,

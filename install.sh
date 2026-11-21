@@ -25,7 +25,9 @@ mkdir -p "$DEST" "$BIN_DIR"
 # Copy the game package (and nothing else) to ~/.local/share/gamebored
 rm -rf "$DEST/gamebored"
 cp -r "$SRC_DIR/gamebored" "$DEST/gamebored"
-# Restore high scores kept by a previous uninstall, if any.
+# Restore user data kept by a previous uninstall, if any.
+# (scores, room progress, notes, to-dos, calculator history, search cache,
+# settings - reinstalls never wipe your stuff.)
 if [[ -f "$HOME/.local/share/gamebored-scores-backup.json" && ! -f "$DEST/scores.json" ]]; then
   cp "$HOME/.local/share/gamebored-scores-backup.json" "$DEST/scores.json"
   echo "High scores restored from backup."
@@ -33,6 +35,22 @@ fi
 if [[ -f "$HOME/.local/share/gamebored-progress-backup.json" && ! -f "$DEST/progress.json" ]]; then
   cp "$HOME/.local/share/gamebored-progress-backup.json" "$DEST/progress.json"
   echo "Room progress restored from backup."
+fi
+restore_file() {
+  # restore_file <backup-name> <dest-name>: copy the backup into place
+  # unless the fresh install already has that file.
+  if [[ -f "$HOME/.local/share/$1" && ! -f "$DEST/$2" ]]; then
+    cp "$HOME/.local/share/$1" "$DEST/$2"
+    echo "$2 restored from backup."
+  fi
+}
+restore_file "gamebored-todos-backup.json" "todos.json"
+restore_file "gamebored-settings-backup.json" "settings.json"
+restore_file "gamebored-calc-backup.json" "calc.json"
+restore_file "gamebored-wonder-cache-backup.json" "wonder_cache.json"
+if [[ -d "$HOME/.local/share/gamebored-notes-backup" && ! -d "$DEST/notes" ]]; then
+  cp -r "$HOME/.local/share/gamebored-notes-backup" "$DEST/notes"
+  echo "Notes restored from backup."
 fi
 # Drop caches if the repo shipped any
 find "$DEST" -name "__pycache__" -type d -prune -exec rm -rf {} + 2>/dev/null || true

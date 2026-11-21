@@ -1,15 +1,17 @@
-# GameBored v1.4.0
+# GameBored v1.5.0 — now it's an OS
 
-GameBored: a colorful terminal arcade menu with 16 games plus Bored
-Wondering, a keyless web search inside the app. Frederick types
-`GameBored` in a shell, picks a game, plays, and lands back at the menu.
-`q`/`Esc` quits anywhere, `p` pauses, `?` helps.
+GameBored: a tiny operating system for the terminal, with 16 games plus
+Bored Wondering, a keyless web search inside the app. Frederick types
+`GameBored` in a shell, lands on the GameBored OS desktop, picks an app
+with the arrow keys, plays, and lands back at the desktop. `q`/`Esc`
+quits anywhere, `p` pauses, `?` helps.
 
 Built for a headless Fedora 43 Server box (SSH + local console): Python 3
 standard library only (`curses` + `urllib`), no pip installs, runs at 80x24,
-survives resizes and tiny terminals (shows a "make the window bigger"
-message instead of crashing), and always restores the terminal on exit or
-crash. No color? Everything still works in plain text.
+survives resizes and tiny terminals (falls back to a list layout when
+narrow, shows a "make the window bigger" message when truly tiny), and
+always restores the terminal on exit or crash. No color? Everything still
+works in plain text (and the Settings app has a mono theme).
 
 ## Install (no sudo)
 
@@ -27,7 +29,9 @@ That copies the game to `~/.local/share/gamebored`, installs an executable
 GameBored      # or: gamebored
 ```
 
-Scores live in `~/.local/share/gamebored/scores.json`.
+Scores live in `~/.local/share/gamebored/scores.json`; notes, to-dos,
+calculator history, the search cache, and settings live next to them.
+Reinstalls restore all of it.
 
 ## Uninstall
 
@@ -35,14 +39,22 @@ Scores live in `~/.local/share/gamebored/scores.json`.
 ./uninstall.sh
 ```
 
-## The menu
+Uninstall backs up your scores, room progress, notes, to-dos, calculator
+history, search cache, and settings first — the next `install.sh`
+restores everything.
 
-Games are grouped by category (ACTION / PUZZLE / CLASSIC) with a
-highlighted selection, per-game best scores translated into Bored Points,
-a combined BP total, and a bottom bar that always shows the keys. Move with
-`Up/Down` (or `j/k`), open with `Enter`, jump straight there with a
-hotkey, type `/` to filter the list, and your last pick is remembered
-next launch.
+## The desktop (GameBored OS)
+
+A top bar shows `GameBored OS`, a live clock, and your combined BP total.
+Below it sits a grid of app icons (ASCII tiles with hotkey + name) grouped
+by section (ACTION / PUZZLE / CLASSIC games, EXPLORE, TOOLS, SYSTEM), and a
+bottom status bar that always shows the keys. Move with the arrow keys
+(`Up/Down/Left/Right`, `j/k` also work up/down), open with `Enter`, jump
+straight there with a hotkey, type `/` to filter every app by name, and
+your last pick is remembered next launch. A short boot splash plays on
+startup (any key skips; turn it off in Settings). Terminals narrower than
+70 columns get the same apps as a plain list; monochrome terminals get
+full-contrast selection instead of colors.
 
 | Hotkey | Entry | Controls |
 |--------|-------|----------|
@@ -62,10 +74,17 @@ next launch.
 | f | Runner — run, jump, dodge, grab the exit! | Arrows/WASD move + jump, R restart room |
 | d | Connect Four — line up four vs the CPU | Left/Right, Space/Enter or 1-7 |
 | e | Flappy — flap through the pipes! | Space/Up flap |
-| W | Bored Wondering — search the web, keyless | Type + Enter, Up/Down pick |
+| W | Bored Wondering — search the web, keyless | Type + Enter, tabs, Enter reads |
 | H | High Scores — every best in raw + Bored Points | Up/Down scroll |
 | T | Score Translator — raw number → BP for any game | Pick game, type number |
 | ? | Help — how to play everything | Any key back |
+| N | Notes — a real note taker | Arrows edit, Esc saves |
+| R | Calculator — quick safe arithmetic | Type, Enter evaluates |
+| L | Clock — wall clock, stopwatch, timer | 1/2/3 modes, Space runs |
+| Y | Calendar — month at a glance | Arrows move, PgUp/PgDn months |
+| O | To-do — stuff to get done | a add, Space check, d delete |
+| S | Settings — themes, CPU pause, splash | Arrows + Left/Right |
+| I | About — version, games, storage used | Any key back |
 
 Sokoban and Runner open a room picker: choose any unlocked room, or jump
 straight into endless mode once you have cleared every built-in room.
@@ -78,7 +97,19 @@ room number and seed).
 Every game shows its controls on screen plus the universal keys (`p`
 pause, `?` help, `q` menu), ends with a friendly game-over panel (score in
 raw and BP, best, NEW HIGH SCORE, win/lose message), and returns to the
-menu. High scores persist per game.
+desktop. High scores persist per game.
+
+## Human CPU opponents
+
+Tic-Tac-Toe, Connect Four, and Pong no longer answer instantly. The computer
+takes a short randomized "thinking" pause (about 0.4–1.5s, longer for
+tense positions) with an animated `CPU is thinking...` indicator, and the
+screen never freezes — `q`/`Esc` bails out of the pause at once. Pong's CPU
+plays with human-like reaction lag: it chases a slightly stale, slightly
+wobbly memory of the ball instead of tracking it perfectly. The pause is
+configurable in Settings (on/off plus relaxed/normal/brisk speed), and it
+is fully disabled when `GAMEBORED_NO_CPU_DELAY=1` is set so automated tests
+stay fast.
 
 ## Bored Points (BP)
 
@@ -90,22 +121,31 @@ the Score Translator (T) converts any raw number for any game. Rates live in
 
 ## Bored Wondering (W)
 
-A search engine inside the app. Type a query and GameBored asks 3 free
+A search engine inside the app. Type a query and GameBored asks 5 free
 sources that need no API key or signup — in parallel, with short timeouts:
 
-1. **DuckDuckGo Instant Answer API** (`api.duckduckgo.com`)
+1. **DuckDuckGo Instant Answer API** (`api.duckduckgo.com`) — abstract,
+   infobox facts, related topics
 2. **Wikipedia search API** (`en.wikipedia.org/w/api.php`)
 3. **Hacker News Algolia API** (`hn.algolia.com/api/v1/search`)
+4. **Wiktionary definitions** (`en.wiktionary.org/w/api.php`)
+5. **Open Library books** (`openlibrary.org/search.json`)
 
-Results merge, dedupe, and show in a scrollable list (title, source tag,
-snippet, URL). `Enter` on a result shows the full summary plus the link.
-Your recent queries are kept as history (Up recalls them). If a source
+Results merge, dedupe, and show in a scrollable list with long wrapped
+summaries (title, source tag, multi-line summary, URL). `Left`/`Right`
+switches source tabs (All / Wiki / DDG / HN / Dict / Books). `Enter` on a
+result opens a full-screen reader: the complete Wikipedia article text with
+section headings, the HN story plus top comments, the full instant answer
+with facts, or the book record — word-wrapped, scrollable with
+arrows/`PgUp`/`PgDn`/`Home`/`End`, `/` finds text inside, `n` jumps to the
+next result. Your recent queries are kept as history (Up recalls them) and
+recent searches are cached (with a visible "cached" badge). If a source
 fails or you are offline, that source is skipped with a friendly note and
 the rest still work — Wondering never crashes, and it is the only part of
 GameBored that touches the network (the 2,853-word and 1,047-word lists in
 `gamebored/data/` stay local and offline).
 
-Text renders of the menu, Wondering, help, and every game live in
+Text renders of the desktop, Wondering, help, and every game live in
 `docs/screenshots/` (regenerate with `python3 tools/capture.py`).
 
 ## Level credits
@@ -145,6 +185,11 @@ python3 -m pytest tests/ -q
 - `tests/test_v13.py` — v1.3.0: all 60 Runner rooms beatable, all 205
   Sokoban rooms solvable (time-boxed push-solver), sampled endless rooms
   solvable/beatable, progress save/load + endless unlock, translator rate.
+- `tests/test_v15.py` — v1.5.0: desktop arrow navigation + remember/filters,
+  notes CRUD + editor buffer, calculator safety, to-do + settings
+  persistence, CPU think delays/skips/env override, mocked full-article
+  fetchers (Wikipedia/HN/DDG/Open Library), query cache TTL, reader
+  scroll/find.
 - `tests/test_pty.py` — drives the real app headlessly in a pseudo-terminal
   (80x24): launches each of the 16 games from the menu (including through
   the Sokoban/Runner room pickers), sends gameplay input, quits back to

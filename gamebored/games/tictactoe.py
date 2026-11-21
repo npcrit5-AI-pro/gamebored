@@ -72,7 +72,12 @@ class TicState:
         self.cursor = 4
         self.message = "You are X. Good luck!"
 
-    def human(self, i):
+    def human_move(self, i):
+        """Place the human's X. Returns 'ai' (CPU to move), 'over', or False.
+
+        The CPU reply is NOT placed here: the UI pauses for a human-like
+        think beat first, then calls ai_place().
+        """
         if not isinstance(i, int) or not 0 <= i < 9:
             return False
         if self.board[i] or winner(self.board):
@@ -81,13 +86,29 @@ class TicState:
         w = winner(self.board)
         if w:
             self.message = _end_message(w)
-            return True
+            return "over"
+        self.message = "CPU is thinking..."
+        return "ai"
+
+    def ai_place(self):
+        """Place the CPU's O after the think pause. Returns index or None."""
+        if winner(self.board):
+            return None
         ai = best_move(self.board)
         if ai is not None:
             self.board[ai] = "O"
         w = winner(self.board)
         self.message = _end_message(w) if w else "Your move!"
-        return True
+        return ai
+
+    def human(self, i):
+        outcome = self.human_move(i)
+        if outcome == "ai":
+            self.ai_place()
+            return True
+        if outcome == "over":
+            return True
+        return False
 
 
 def _end_message(w):
@@ -132,6 +153,30 @@ def draw(screen, st):
                                   curses.A_REVERSE)
         if r < 2:
             ui.safe_addstr(screen, y + 1, ox, "---+---+---")
+
+
+def _human_turn(stdscr, st, i):
+    """Human move, human-like CPU think pause, then the CPU reply."""
+    from .. import cpu as cpu_mod
+    from .. import settings as settings_mod
+    outcome = st.human_move(i)
+    if outcome != "ai":
+        return outcome
+    # Fuller boards are tenser: slightly longer think near the end.
+    empties = sum(1 for cell in st.board if not cell)
+    difficulty = 1.0 if empties <= 4 else (0.5 if empties <= 6 else 0.0)
+    draw(stdscr, st)
+    ui.game_footer(stdscr, CONTROLS)
+    try:
+        stdscr.refresh()
+    except curses.error:
+        pass
+    if cpu_mod.think(stdscr, difficulty=difficulty,
+                     settings=settings_mod.load()) == "quit":
+        st.message = "Your move!"
+        return "quit"
+    st.ai_place()
+    return "ai"
 
 
 def play(stdscr, score_store):
@@ -199,6 +244,8 @@ def play(stdscr, score_store):
         elif key == curses.KEY_RIGHT:
             st.cursor = (st.cursor + 1) % 9
         elif key in (ord(" "), 10, 13, curses.KEY_ENTER):
-            st.human(st.cursor)
+            if _human_turn(stdscr, st, st.cursor) == "quit":
+                return
         elif ord("1") <= key <= ord("9"):
-            st.human(key - ord("1"))
+            if _human_turn(stdscr, st, key - ord("1")) == "quit":
+                return
