@@ -401,7 +401,7 @@ def play(stdscr, score_store):
                  label="SOKOBAN room:%d/%d moves:%d best:%s score:%d" % (
                      st.level + 1, len(LEVELS), st.moves, best_txt,
                      total_score))
-        ui.game_footer(stdscr, CONTROLS + " | home %d/%d" % (
+        ui.game_footer(stdscr, CONTROLS + " | boxes home %d/%d" % (
             st.boxes_home, len(st.boxes)))
         try:
             stdscr.refresh()

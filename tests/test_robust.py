@@ -963,3 +963,11 @@ def test_round54_pickers_answer_help_key(monkeypatch):
             raise
         assert res is None
     assert sorted(shown) == ["platformer", "sokoban"], shown
+
+
+def test_round55_sokoban_footer_names_boxes_home():
+    """Round 55: footer says 'boxes home N/M', not cryptic 'home N/M'."""
+    import inspect
+    from gamebored.games import sokoban
+    src = inspect.getsource(sokoban.play)
+    assert "boxes home %d/%d" in src
