@@ -18,14 +18,18 @@ def main(argv=None):
         print("GameBored %s" % __version__)
         return 0
     if argv and argv[0] == "--list":
+        from . import app as app_mod
         from .games import GAMES
 
+        print("Games:")
         for i, mod in enumerate(GAMES, 1):
             print("%2d. %-12s %s" % (i, mod.TITLE, mod.DESCRIPTION))
-        print(" W. Bored Wondering Search the web, keyless")
-        print(" H. High Scores   Every best in raw + Bored Points")
-        print(" T. Score Translator Raw number -> BP for any game")
-        print(" ?. Help           How to play everything")
+        print("Apps:")
+        for entry in app_mod.build_entries():
+            if entry.get("kind") in ("wondering", "scores", "translator",
+                                      "help", "app"):
+                print(" %s. %-12s %s" % (entry["hotkey"], entry["title"],
+                                         entry["desc"]))
         return 0
     if argv and argv[0].startswith("-"):
         print("Unknown option: %s" % argv[0])
