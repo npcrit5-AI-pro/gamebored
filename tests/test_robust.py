@@ -422,6 +422,18 @@ def test_round33_every_draw_survives_odd_sizes():
             draw(FakeScreen(h, w))  # must not raise
 
 
+def test_round34_capture_renders_every_screen(tmp_path):
+    import sys
+    sys.path.insert(0, os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        "tools"))
+    from capture import build_states
+    states = build_states()
+    assert len(states) == 15 + 3, sorted(states)
+    for name, text in states.items():
+        assert isinstance(text, str) and text.strip(), name
+
+
 def test_round29_game_over_returns_on_any_key():
     import curses
     from gamebored import ui as ui_mod
