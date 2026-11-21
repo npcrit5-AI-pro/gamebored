@@ -67,3 +67,12 @@ def test_round5_tictactoe_illegal_moves_rejected():
         assert st.human(bad) is False
     assert "X" not in st.board and "O" not in st.board
     assert st.human(0) is True
+
+
+def test_round6_hangman_ignores_bad_guesses():
+    from gamebored.games import hangman
+    st = hangman.HangState(word="APPLE")
+    for bad in (None, 5, ["a"], "", "ab", "5", " "):
+        assert st.guess(bad) is None
+    assert st.wrong == 0 and st.guessed == set()
+    assert st.guess("a") is True

@@ -52,6 +52,8 @@ class HangState:
         self.wrong = 0
 
     def guess(self, letter):
+        if not isinstance(letter, str):
+            return None
         letter = letter.upper()
         if len(letter) != 1 or not letter.isalpha():
             return None
