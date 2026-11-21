@@ -27,6 +27,10 @@ def main(argv=None):
         print(" T. Score Translator Raw number -> BP for any game")
         print(" ?. Help           How to play everything")
         return 0
+    if argv and argv[0].startswith("-"):
+        print("Unknown option: %s" % argv[0])
+        print("Usage: GameBored [--help] [--version] [--list]")
+        return 2
     from .app import run
 
     run()

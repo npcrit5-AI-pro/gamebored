@@ -17,20 +17,33 @@ import urllib.parse
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 
-USER_AGENT = "GameBored/1.3.0 (educational terminal search)"
+
+USER_AGENT = "GameBored/1.4.0 (educational terminal search)"
 TIMEOUT = 4
 
 SOURCES = ("duckduckgo", "wikipedia", "hackernews")
 
 
+MAX_RESPONSE_BYTES = 2 * 1024 * 1024  # never buffer more than 2 MiB per source
+
+
 def _fetch_json(url, timeout=TIMEOUT):
     req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
     with urllib.request.urlopen(req, timeout=timeout) as resp:
-        raw = resp.read().decode("utf-8", "replace")
+        raw = resp.read(MAX_RESPONSE_BYTES + 1).decode("utf-8", "replace")
+    if len(raw) > MAX_RESPONSE_BYTES:
+        raise ValueError("response too large - skipping")
     return json.loads(raw)
 
 
 def _clean(text, limit=220):
+    if text is None:
+        return ""
+    if not isinstance(text, str):
+        try:
+            text = str(text)
+        except Exception:
+            return ""
     text = html.unescape(re.sub(r"<[^>]+>", "", text or "")).strip()
     text = re.sub(r"\s+", " ", text)
     if len(text) > limit:
@@ -136,18 +149,43 @@ _SEARCHERS = {
 
 
 def _norm_url(url):
+    if not isinstance(url, str):
+        try:
+            url = str(url)
+        except Exception:
+            return ""
     u = (url or "").strip().lower()
     u = re.sub(r"^https?://(www\.)?", "", u).rstrip("/")
     return u
 
 
+def _as_text(value):
+    if isinstance(value, str):
+        return value
+    try:
+        return str(value)
+    except Exception:
+        return ""
+
+
 def merge_results(per_source):
-    """Merge per-source lists: keep order wiki->ddg->hn, dedupe by URL/title."""
+    """Merge per-source lists: keep order wiki->ddg->hn, dedupe by URL/title.
+
+    Never raises: skips malformed items so one bad source (or injected
+    test searcher) cannot take down the results screen.
+    """
     seen_urls, seen_titles, merged = set(), set(), []
+    if not isinstance(per_source, dict):
+        return []
     for source in ("wikipedia", "duckduckgo", "hackernews"):
-        for item in per_source.get(source, []) or []:
-            title = (item.get("title") or "").strip()
-            url = (item.get("url") or "").strip()
+        items = per_source.get(source, []) or []
+        if not isinstance(items, list):
+            continue
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+            title = _as_text(item.get("title") or "").strip()
+            url = _as_text(item.get("url") or "").strip()
             if not title or not url:
                 continue
             key_u, key_t = _norm_url(url), title.lower()
@@ -158,7 +196,7 @@ def merge_results(per_source):
             merged.append({
                 "title": title,
                 "source": item.get("source") or source,
-                "snippet": item.get("snippet") or "",
+                "snippet": _as_text(item.get("snippet") or ""),
                 "url": url,
             })
     return merged

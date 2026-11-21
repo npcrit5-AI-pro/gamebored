@@ -8,7 +8,7 @@ from .. import ui
 
 TITLE = "Pong"
 DESCRIPTION = "Classic paddle duel vs CPU"
-CONTROLS = "Up/Down or W/S move | first to 5 | p pause | q menu"
+CONTROLS = "Up/Down or W/S move | first to 5 | p pause | ? help | q menu"
 GAME_ID = "pong"
 CATEGORY = "ACTION"
 WIN_SCORE = 5
@@ -34,6 +34,14 @@ class PongState:
         self.vy = 0.5 if (self.height % 2 == 0) else -0.5
 
     def step(self, player_move=0, cpu_speed=0.6):
+        try:
+            player_move = int(player_move)
+        except (TypeError, ValueError):
+            player_move = 0
+        try:
+            cpu_speed = float(cpu_speed)
+        except (TypeError, ValueError):
+            cpu_speed = 0.6
         self.player = max(self.paddle // 2,
                           min(self.height - 1 - self.paddle // 2,
                               self.player + player_move))
@@ -131,7 +139,7 @@ def play(stdscr, score_store):
             scores_mod.save(score_store)
             return
         elif key in ui.PAUSE_KEYS:
-            if ui.pause_overlay(stdscr) == "quit":
+            if ui.pause_overlay(stdscr, TITLE) == "quit":
                 return
             try:
                 stdscr.timeout(50)

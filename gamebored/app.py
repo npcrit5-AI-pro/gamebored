@@ -14,6 +14,7 @@ from . import scores as scores_mod
 from . import translator as translator_mod
 from . import ui
 from . import wondering as wondering_mod
+from . import __version__ as _pkg_version
 from .games import GAMES
 
 LOGO = [
@@ -22,7 +23,7 @@ LOGO = [
     " \\____|\\__,_|_| |_| |_|\\___|  |___/ \\___/|_| \\___|\\___|\\__,_|",
 ]
 
-SUBTITLE = "Bored? Game on! Pick a game: (v1.3.0)"
+SUBTITLE = "Bored? Game on! Pick a game: (v%s)" % _pkg_version
 
 GAME_HOTKEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0",
                 "a", "b", "c", "d", "e", "f"]
@@ -81,9 +82,42 @@ def _commas(n):
     return s + out
 
 
-def draw_menu(win, selected, score_store, entries=None):
+def _apply_filter(entries, query):
+    """Entries matching the filter query (title/desc/hotkey/category)."""
+    q = (query or "").strip().lower()
+    if not q:
+        return list(entries or [])
+    out = []
+    for entry in entries or []:
+        try:
+            hay = "%s %s %s %s" % (entry.get("title", ""),
+                                   entry.get("desc", ""),
+                                   entry.get("hotkey", ""),
+                                   entry.get("category", ""))
+        except Exception:
+            continue
+        if q in hay.lower():
+            out.append(entry)
+    return out
+
+
+def draw_menu(win, selected, score_store, entries=None, status=None):
     if entries is None:
         entries = build_entries()
+    if not entries:
+        try:
+            win.clear()
+            h, w = win.getmaxyx()
+            ui.centered(win, 0, "GAMEBORED", ui.color(1) | curses.A_BOLD)
+            ui.centered(win, 2, "No entries to show.", ui.color(7))
+            if status:
+                ui.centered(win, h - 2, status[: w - 2],
+                            ui.color(3) | curses.A_BOLD)
+            ui.footer(win, "q quit")
+            win.refresh()
+        except curses.error:
+            pass
+        return
     try:
         win.clear()
     except curses.error:
@@ -156,8 +190,11 @@ def draw_menu(win, selected, score_store, entries=None):
         entry = entries[selected % len(entries)]
         detail = "%s: %s" % (entry["title"], entry["controls"])
         ui.centered(win, h - 2, detail[: w - 2], ui.color(7))
+    if status and h - 2 >= 0:
+        ui.centered(win, h - 2, status[: w - 2],
+                    ui.color(3) | curses.A_BOLD)
     ui.footer(win, "Up/Down+j/k move | Enter open | 1-9,0,a-f games | "
-                   "W search H scores T translator ? help | q quit")
+                   "W search H scores T translator ? help | / filter | q quit")
     try:
         win.refresh()
     except curses.error:
@@ -166,6 +203,8 @@ def draw_menu(win, selected, score_store, entries=None):
 
 def hotkey_index(entries, key):
     """Map a pressed key to an entry index, or None."""
+    if not isinstance(key, int):
+        return None
     if 0 <= key <= 255:
         ch = chr(key)
         for i, e in enumerate(entries):
@@ -174,8 +213,51 @@ def hotkey_index(entries, key):
     return None
 
 
+LAST_KEY = "_menu_last"
+
+
+def _entry_id(entry):
+    """Stable id for a menu entry: the game id, or kind:title for extras."""
+    try:
+        if entry.get("kind") == "game":
+            return "game:%s" % entry["mod"].GAME_ID
+        return "%s:%s" % (entry.get("kind"), entry.get("title"))
+    except Exception:
+        return ""
+
+
+def _restore_selected(score_store, entries):
+    """Index of the entry picked last time, or 0 when unknown."""
+    want = None
+    try:
+        if isinstance(score_store, dict):
+            want = score_store.get(LAST_KEY)
+    except Exception:
+        want = None
+    if not isinstance(want, str) or not want:
+        return 0
+    for i, entry in enumerate(entries or []):
+        if _entry_id(entry) == want:
+            return i
+    return 0
+
+
+def _remember_selected(score_store, entries, idx):
+    """Persist the picked entry id; never breaks saving."""
+    if not isinstance(score_store, dict) or not entries:
+        return
+    try:
+        score_store[LAST_KEY] = _entry_id(entries[idx % len(entries)])
+        scores_mod.save(score_store)
+    except Exception:
+        pass
+
+
 def menu_loop(stdscr):
-    curses.curs_set(0)
+    try:
+        curses.curs_set(0)
+    except curses.error:
+        pass
     try:
         stdscr.keypad(True)
     except curses.error:
@@ -187,7 +269,23 @@ def menu_loop(stdscr):
     ui.init_colors()
     score_store = scores_mod.load()
     entries = build_entries()
-    selected = 0
+    if not entries:
+        try:
+            stdscr.clear()
+        except curses.error:
+            pass
+        ui.centered(stdscr, 0, "GAMEBORED", ui.color(1) | curses.A_BOLD)
+        ui.centered(stdscr, 2, "No entries to show.", ui.color(7))
+        ui.footer(stdscr, "q quit")
+        try:
+            stdscr.refresh()
+            stdscr.timeout(-1)
+            stdscr.getch()
+        except curses.error:
+            pass
+        return
+    selected = _restore_selected(score_store, entries)
+    filtering, query = False, ""
     while True:
         if ui.too_small(stdscr):
             ui.show_too_small(stdscr)
@@ -200,19 +298,61 @@ def menu_loop(stdscr):
             elif key == curses.KEY_RESIZE:
                 continue
             continue
-        draw_menu(stdscr, selected, score_store, entries)
+        shown = _apply_filter(entries, query) if filtering else entries
+        status = None
+        if filtering:
+            status = "Filter: %s_ (%d match%s) | Enter open | Esc clear" % (
+                query, len(shown), "" if len(shown) == 1 else "es")
+        draw_menu(stdscr, selected, score_store, shown, status=status)
         try:
             key = stdscr.getch()
         except curses.error:
             key = -1
         if key in ui.QUIT_KEYS:
+            if filtering:
+                filtering, query = False, ""
+                selected = _restore_selected(score_store, entries)
+                continue
             return
+        if filtering:
+            if key == curses.KEY_RESIZE:
+                continue
+            elif key in (10, 13, curses.KEY_ENTER):
+                if shown:
+                    target = shown[selected % len(shown)]
+                    idx = entries.index(target)
+                    _remember_selected(score_store, entries, idx)
+                    launch_entry(stdscr, target, score_store)
+                    _hide_cursor(stdscr)
+                    score_store = scores_mod.load()
+                    entries = build_entries()
+                filtering, query = False, ""
+                selected = _restore_selected(score_store, entries)
+            elif key == curses.KEY_UP:
+                if shown:
+                    selected = (selected - 1) % len(shown)
+            elif key == curses.KEY_DOWN:
+                if shown:
+                    selected = (selected + 1) % len(shown)
+            elif key in (curses.KEY_BACKSPACE, 127, 8):
+                query = query[:-1]
+                selected = 0
+            elif 32 <= key <= 126 and len(query) < 24:
+                query += chr(key)
+                selected = 0
+            continue
+        if key == ord("/"):
+            filtering, query = True, ""
+            selected = 0
+            continue
         elif key == curses.KEY_UP or key == ord("k"):
             selected = (selected - 1) % len(entries)
         elif key == curses.KEY_DOWN or key == ord("j"):
             selected = (selected + 1) % len(entries)
         elif key in (10, 13, curses.KEY_ENTER, ord(" ")):
+            _remember_selected(score_store, entries, selected)
             launch_entry(stdscr, entries[selected], score_store)
+            _hide_cursor(stdscr)
             score_store = scores_mod.load()
         elif key == curses.KEY_RESIZE:
             continue
@@ -220,8 +360,23 @@ def menu_loop(stdscr):
             idx = hotkey_index(entries, key)
             if idx is not None:
                 selected = idx
+                _remember_selected(score_store, entries, selected)
                 launch_entry(stdscr, entries[idx], score_store)
+                _hide_cursor(stdscr)
                 score_store = scores_mod.load()
+
+
+def _hide_cursor(stdscr):
+    """Games with text entry show the cursor; always hide it for the menu."""
+    try:
+        curses.curs_set(0)
+    except curses.error:
+        pass
+    try:
+        stdscr.keypad(True)
+        stdscr.timeout(-1)
+    except curses.error:
+        pass
 
 
 def launch_entry(stdscr, entry, score_store):

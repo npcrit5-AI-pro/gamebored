@@ -58,7 +58,15 @@ def _transpose(board):
 
 
 def move_board(board, direction):
-    """direction in {'left','right','up','down'}. Returns (new, gained, moved)."""
+    """direction in {'left','right','up','down'}. Returns (new, gained, moved).
+
+    Unknown directions (or a malformed board) return the board unchanged
+    with no gain, instead of raising: the game loop passes user input here.
+    """
+    if not isinstance(board, list) or len(board) != SIZE or any(
+            not isinstance(row, list) or len(row) != SIZE for row in board):
+        return [row[:] if isinstance(row, list) else [0] * SIZE
+                for row in (board + [[0] * SIZE] * SIZE)[:SIZE]], 0, False
     if direction == "left":
         return move_left(board)
     if direction == "right":
@@ -71,7 +79,7 @@ def move_board(board, direction):
         tr = _transpose(board)
         rev, g, m = move_left(_reverse(tr))
         return _transpose(_reverse(rev)), g, m
-    raise ValueError(direction)
+    return [row[:] for row in board], 0, False
 
 
 def can_move(board):
@@ -210,7 +218,7 @@ def play(stdscr, score_store):
             scores_mod.save(score_store)
             return
         elif key in ui.PAUSE_KEYS:
-            if ui.pause_overlay(stdscr) == "quit":
+            if ui.pause_overlay(stdscr, TITLE) == "quit":
                 return
             continue
         if key in ui.HELP_KEYS:

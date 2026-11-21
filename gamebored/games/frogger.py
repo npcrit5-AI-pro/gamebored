@@ -27,8 +27,16 @@ class FrogState:
     """Headless road-crossing logic: no curses calls in here."""
 
     def __init__(self, width=28, lanes=LANES, seed=None):
-        self.width = width
-        self.lanes = lanes
+        try:
+            width = int(width)
+        except (TypeError, ValueError):
+            width = 28
+        try:
+            lanes = int(lanes)
+        except (TypeError, ValueError):
+            lanes = LANES
+        self.width = max(4, width)
+        self.lanes = max(1, lanes)
         self.rng = random.Random(seed)
         self.level = 1
         self.lives = LIVES
@@ -177,7 +185,7 @@ def play(stdscr, score_store):
             scores_mod.save(score_store)
             return
         elif key in ui.PAUSE_KEYS:
-            if ui.pause_overlay(stdscr) == "quit":
+            if ui.pause_overlay(stdscr, TITLE) == "quit":
                 return
             try:
                 stdscr.timeout(90)

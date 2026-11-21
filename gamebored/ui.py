@@ -17,8 +17,6 @@ TITLE = "GAMEBORED"
 QUIT_KEYS = (27, ord("q"), ord("Q"))  # Esc / q
 PAUSE_KEYS = (ord("p"), ord("P"))
 HELP_KEYS = (ord("?"),)
-
-FOOTER_HELP = "Up/Down move | Enter open | 1-9,0/W/H/T/? shortcuts | q quit"
 GAME_FOOTER_SUFFIX = "p pause | ? help | q menu"
 
 
@@ -72,6 +70,11 @@ def color(num):
 
 def safe_addstr(win, y, x, text, attr=0):
     try:
+        if not isinstance(text, str):
+            try:
+                text = str(text)
+            except Exception:
+                return
         h, w = win.getmaxyx()
         if y < 0 or y >= h or x >= w:
             return
@@ -85,19 +88,27 @@ def safe_addstr(win, y, x, text, attr=0):
         if not text:
             return
         win.addstr(y, x, text, attr)
-    except curses.error:
+    except (curses.error, TypeError, ValueError, OverflowError):
         pass
 
 
 def safe_addch(win, y, x, ch, attr=0):
     try:
+        if isinstance(ch, str):
+            if len(ch) != 1:
+                return
+        elif isinstance(ch, int):
+            if not 0 <= ch <= 255:
+                return
+        else:
+            return
         h, w = win.getmaxyx()
         if y < 0 or y >= h or x < 0 or x >= w:
             return
         if y == h - 1 and x == w - 1:
             return
         win.addch(y, x, ch, attr)
-    except curses.error:
+    except (curses.error, TypeError, ValueError, OverflowError):
         pass
 
 
@@ -217,8 +228,10 @@ def pause_overlay(win, title="PAUSED"):
         try:
             h, w = win.getmaxyx()
             box_w = min(44, w - 4)
+            headline = "PAUSED" if title in ("PAUSED", "") else \
+                "PAUSED - %s" % str(title)[:20]
             lines = [
-                title,
+                headline,
                 "",
                 "Take a breather. Your game is waiting.",
                 "",
@@ -253,7 +266,7 @@ def pause_overlay(win, title="PAUSED"):
 
 HELP_LINES = [
     ("Move / pick", "Up/Down arrows (or j/k), Enter to open"),
-    ("Hotkeys", "1-9,0,a-f games - W search - H scores - T points - ? this help"),
+    ("Hotkeys", "1-9,0,a-f games - / filter - W search - H scores - T points - ? help"),
     ("In every game", "Arrows/WASD play - p pause - ? help - q/Esc menu"),
     ("Scores", "Best score per game is saved automatically"),
     ("Tiny window?", "Make it 80x24 or bigger; nothing breaks"),
@@ -346,7 +359,7 @@ def game_over_screen(win, game_title, lines, score=None, best=None,
         if is_new_high:
             box_lines.append("NEW HIGH SCORE!")
         box_lines.append("")
-        box_lines.append("Enter/q: back to menu")
+        box_lines.append("any key: back to menu")
         box_w = min(w - 4, max(40, max(len(ln) for ln in box_lines) + 6))
         box_h = min(len(box_lines) + 2, h)
         y0 = max(0, (h - box_h) // 2)
@@ -364,10 +377,10 @@ def game_over_screen(win, game_title, lines, score=None, best=None,
                 attr = head_attr
             elif ln == "NEW HIGH SCORE!":
                 attr = color(3) | curses.A_BOLD | curses.A_BLINK
-            elif ln == "Enter/q: back to menu":
+            elif ln == "any key: back to menu":
                 attr = color(7)
             centered(win, y0 + 1 + i, ln[:box_w], attr)
-        footer(win, "Enter/q back to menu")
+        footer(win, "any key back to menu")
         win.refresh()
         while True:
             try:

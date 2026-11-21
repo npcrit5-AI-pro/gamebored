@@ -9,7 +9,7 @@ from .. import words as words_mod
 
 TITLE = "Word Guess"
 DESCRIPTION = "Wordle-style: 6 tries"
-CONTROLS = "Type + Enter submit | Backspace delete | p pause | q menu"
+CONTROLS = "Type + Enter submit | Backspace delete | p pause | ? help | q menu"
 GAME_ID = "wordle"
 CATEGORY = "PUZZLE"
 WORD_LEN = 5
@@ -76,7 +76,10 @@ def feedback(answer, guess):
 class WordleState:
     def __init__(self, answer=None, seed=None):
         rng = random.Random(seed)
-        self.answer = answer or rng.choice(ANSWERS)
+        if not isinstance(answer, str) or len(answer) != WORD_LEN \
+                or not answer.isalpha():
+            answer = None
+        self.answer = (answer or rng.choice(ANSWERS)).upper()
         self.rows = []  # (guess, feedback)
         self.current = ""
         self.over = False
@@ -203,7 +206,7 @@ def play(stdscr, score_store):
                 pass
             return
         elif key in ui.PAUSE_KEYS:
-            if ui.pause_overlay(stdscr) == "quit":
+            if ui.pause_overlay(stdscr, TITLE) == "quit":
                 return
             continue
         if key in ui.HELP_KEYS:

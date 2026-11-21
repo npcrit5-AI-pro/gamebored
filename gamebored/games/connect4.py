@@ -13,7 +13,7 @@ from .. import ui
 
 TITLE = "Connect Four"
 DESCRIPTION = "Line up four vs the CPU"
-CONTROLS = "Left/Right move | Space/Enter or 1-7 drop | p pause | q menu"
+CONTROLS = "Left/Right move | Space/Enter or 1-7 drop | p pause | ? help | q menu"
 GAME_ID = "connect4"
 CATEGORY = "CLASSIC"
 
@@ -32,10 +32,16 @@ class ConnectState:
         self.winner_mark = None
 
     def cell(self, r, c):
+        if not isinstance(r, int) or not isinstance(c, int):
+            return ""
+        if not 0 <= r < ROWS or not 0 <= c < COLS:
+            return ""
         return self.board[r * COLS + c]
 
     def drop(self, col, mark):
         """Drop mark into col; returns the row or None if full/invalid."""
+        if not isinstance(col, int):
+            return None
         if not 0 <= col < COLS:
             return None
         for r in range(ROWS - 1, -1, -1):
@@ -180,7 +186,7 @@ def play(stdscr, score_store):
         if key in ui.QUIT_KEYS:
             return
         elif key in ui.PAUSE_KEYS:
-            if ui.pause_overlay(stdscr) == "quit":
+            if ui.pause_overlay(stdscr, TITLE) == "quit":
                 return
             continue
         if key in ui.HELP_KEYS:

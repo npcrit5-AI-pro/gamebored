@@ -8,7 +8,7 @@ from . import ui
 
 TITLE = "Bored Wondering"
 DESCRIPTION = "Search the web, keyless"
-CONTROLS = "Type + Enter search | Up/Down pick | Enter open | Esc menu"
+CONTROLS = "Type + Enter search | Up/Down pick | Enter open | q/Esc menu"
 GAME_ID = "wondering"
 CATEGORY = "Explore"
 
@@ -120,33 +120,45 @@ def draw_screen(win, query, results, errors, sel, top, searching,
         pass
 
 
+def _detail_lines(result, w):
+    """Wrap a search result into display lines for the detail panel."""
+    words, lines, cur = (result.get("snippet") or "(no summary)").split(" "), [], ""
+    for wd in words:
+        if len(cur) + len(wd) + 1 > max(20, w - 6):
+            lines.append(cur)
+            cur = wd
+        else:
+            cur = (cur + " " + wd).strip()
+    if cur:
+        lines.append(cur)
+    lines.append("")
+    lines.append("Link:")
+    url = result.get("url") or ""
+    if not isinstance(url, str):
+        try:
+            url = str(url)
+        except Exception:
+            url = ""
+    while url:
+        lines.append(url[: max(20, w - 6)])
+        url = url[max(20, w - 6):]
+    return lines
+
+
 def show_detail(win, result):
     try:
         win.timeout(-1)
     except curses.error:
         pass
     top = 0
+    lines = []
     while True:
         try:
             win.clear()
             h, w = win.getmaxyx()
-            ui.header(win, result["title"][: max(0, w - 2)],
-                      "[%s]" % result["source"].upper())
-            words, lines, cur = (result["snippet"] or "(no summary)").split(" "), [], ""
-            for wd in words:
-                if len(cur) + len(wd) + 1 > max(20, w - 6):
-                    lines.append(cur)
-                    cur = wd
-                else:
-                    cur = (cur + " " + wd).strip()
-            if cur:
-                lines.append(cur)
-            lines.append("")
-            lines.append("Link:")
-            url = result["url"]
-            while url:
-                lines.append(url[: max(20, w - 6)])
-                url = url[max(20, w - 6):]
+            ui.header(win, str(result.get("title", ""))[: max(0, w - 2)],
+                      "[%s]" % str(result.get("source", "?")).upper())
+            lines = _detail_lines(result, w)
             visible = max(1, h - 5)
             for i in range(visible):
                 idx = top + i
@@ -166,7 +178,12 @@ def show_detail(win, result):
         if key == curses.KEY_UP:
             top = max(0, top - 1)
         elif key == curses.KEY_DOWN:
-            top += 1
+            try:
+                h, _ = win.getmaxyx()
+            except curses.error:
+                h = 24
+            visible = max(1, h - 5)
+            top = min(top + 1, max(0, len(lines) - visible))
         elif key == curses.KEY_RESIZE:
             continue
         elif key != -1:

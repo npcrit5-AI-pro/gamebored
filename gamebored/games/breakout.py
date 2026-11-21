@@ -8,7 +8,7 @@ from .. import ui
 
 TITLE = "Breakout"
 DESCRIPTION = "Bounce ball, smash bricks"
-CONTROLS = "Left/Right or A/D move paddle | 3 lives | p pause | q menu"
+CONTROLS = "Left/Right or A/D move paddle | 3 lives | p pause | ? help | q menu"
 GAME_ID = "breakout"
 CATEGORY = "ACTION"
 
@@ -38,6 +38,10 @@ class BreakState:
         self.vy = -1.0
 
     def step(self, move=0):
+        try:
+            move = int(move)
+        except (TypeError, ValueError):
+            move = 0
         self.paddle = max(self.paddle_w // 2,
                           min(self.width - self.paddle_w // 2 - 1,
                               self.paddle + move))
@@ -133,7 +137,7 @@ def play(stdscr, score_store):
             scores_mod.save(score_store)
             return
         elif key in ui.PAUSE_KEYS:
-            if ui.pause_overlay(stdscr) == "quit":
+            if ui.pause_overlay(stdscr, TITLE) == "quit":
                 return
             try:
                 stdscr.timeout(50)

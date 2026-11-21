@@ -9,7 +9,7 @@ from .. import ui
 
 TITLE = "Invaders"
 DESCRIPTION = "Shoot the descending aliens"
-CONTROLS = "Left/Right or A/D move | Space shoot | p pause | q menu"
+CONTROLS = "Left/Right or A/D move | Space shoot | p pause | ? help | q menu"
 GAME_ID = "invaders"
 CATEGORY = "ACTION"
 
@@ -21,7 +21,11 @@ class InvaderState:
         self.width = width
         self.height = height
         self.rng = random.Random(seed)
-        self.level = level
+        try:
+            level = int(level)
+        except (TypeError, ValueError):
+            level = 1
+        self.level = max(1, level)
         self.ship_x = width // 2
         self.aliens = set()
         self.alien_dir = 1
@@ -151,7 +155,7 @@ def play(stdscr, score_store):
             scores_mod.save(score_store)
             return
         elif key in ui.PAUSE_KEYS:
-            if ui.pause_overlay(stdscr) == "quit":
+            if ui.pause_overlay(stdscr, TITLE) == "quit":
                 return
             try:
                 stdscr.timeout(50)

@@ -33,14 +33,20 @@ _FALLBACK_WORDS5 = [
 ]
 
 
+_MAX_WORD_LEN = 64  # corrupt data lines longer than this are ignored
+
+
 def _read_word_file(path):
     words = []
     try:
         with open(path, "r", encoding="utf-8") as fh:
             for line in fh:
                 word = line.strip().lower()
-                if word and word.isalpha():
-                    words.append(word)
+                if not word or not word.isalpha():
+                    continue
+                if len(word) > _MAX_WORD_LEN:
+                    continue
+                words.append(word)
     except OSError:
         return []
     # de-duplicate while keeping file order

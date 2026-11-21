@@ -52,10 +52,11 @@ def show_high_scores(win, score_store):
                 if idx >= len(rows):
                     break
                 title, high, bp, plays = rows[idx]
-                line = "%-12s  best %-8d -> %8s BP" % (
-                    title[:12], high, _commas(bp))
+                line = "%-12s  best %-7d -> %8s BP %4d %s" % (
+                    title[:12], high, _commas(bp), plays,
+                    "play" if plays == 1 else "plays")
                 attr = ui.color(2) | curses.A_BOLD if high else ui.color(7)
-                ui.safe_addstr(win, y + i, max(2, (w - 44) // 2),
+                ui.safe_addstr(win, y + i, max(2, (w - 56) // 2),
                                line[: w - 4], attr)
             if top + visible < len(rows):
                 ui.safe_addstr(win, h - 2, w - 14, "(more: Up/Down)",
@@ -76,7 +77,12 @@ def show_high_scores(win, score_store):
         if key == curses.KEY_UP:
             top = max(0, top - 1)
         elif key == curses.KEY_DOWN:
-            top += 1
+            try:
+                h, _ = win.getmaxyx()
+            except curses.error:
+                h = 24
+            visible = max(1, h - 3 - 3)
+            top = min(top + 1, max(0, len(rows) - visible))
         elif key == curses.KEY_RESIZE:
             continue
         elif key in ui.HELP_KEYS:
@@ -236,7 +242,7 @@ def build_help_lines(game_mods):
         "MENU",
         "  Up/Down (or j/k) moves - Enter opens the highlighted entry.",
         "  Hotkeys: 1-9,0,a-f games - W search - H scores - T translator.",
-        "  ? shows this help - q/Esc quits.",
+        "  / filters the menu - ? shows this help - q/Esc quits.",
         "",
         "WHILE PLAYING",
         "  Arrows/WASD play - p pauses - ? helps - q/Esc back to menu.",

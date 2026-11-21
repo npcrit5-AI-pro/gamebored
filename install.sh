@@ -7,6 +7,17 @@ SRC_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DEST="$HOME/.local/share/gamebored"
 BIN_DIR="$HOME/.local/bin"
 
+# Preflight: stock python3 with curses is all GameBored needs.
+if ! command -v python3 >/dev/null 2>&1; then
+  echo "Error: python3 not found. Install it first (e.g. sudo dnf install python3)." >&2
+  exit 1
+fi
+if ! python3 -c "import sys, curses; sys.exit(0 if sys.version_info >= (3, 8) else 1)" 2>/dev/null; then
+  echo "Error: GameBored needs python3 >= 3.8 with curses support." >&2
+  python3 --version 2>&1 || true
+  exit 1
+fi
+
 echo "Installing GameBored..."
 
 mkdir -p "$DEST" "$BIN_DIR"
@@ -14,6 +25,15 @@ mkdir -p "$DEST" "$BIN_DIR"
 # Copy the game package (and nothing else) to ~/.local/share/gamebored
 rm -rf "$DEST/gamebored"
 cp -r "$SRC_DIR/gamebored" "$DEST/gamebored"
+# Restore high scores kept by a previous uninstall, if any.
+if [[ -f "$HOME/.local/share/gamebored-scores-backup.json" && ! -f "$DEST/scores.json" ]]; then
+  cp "$HOME/.local/share/gamebored-scores-backup.json" "$DEST/scores.json"
+  echo "High scores restored from backup."
+fi
+if [[ -f "$HOME/.local/share/gamebored-progress-backup.json" && ! -f "$DEST/progress.json" ]]; then
+  cp "$HOME/.local/share/gamebored-progress-backup.json" "$DEST/progress.json"
+  echo "Room progress restored from backup."
+fi
 # Drop caches if the repo shipped any
 find "$DEST" -name "__pycache__" -type d -prune -exec rm -rf {} + 2>/dev/null || true
 

@@ -47,11 +47,15 @@ def is_won(word, guessed):
 class HangState:
     def __init__(self, word=None, seed=None):
         rng = random.Random(seed)
-        self.word = word or rng.choice(WORDS)
+        if not isinstance(word, str) or not word.isalpha():
+            word = None
+        self.word = (word or rng.choice(WORDS)).upper()
         self.guessed = set()
         self.wrong = 0
 
     def guess(self, letter):
+        if not isinstance(letter, str):
+            return None
         letter = letter.upper()
         if len(letter) != 1 or not letter.isalpha():
             return None
@@ -137,7 +141,7 @@ def play(stdscr, score_store):
         if key in ui.QUIT_KEYS:
             return
         elif key in ui.PAUSE_KEYS:
-            if ui.pause_overlay(stdscr) == "quit":
+            if ui.pause_overlay(stdscr, TITLE) == "quit":
                 return
             continue
         if key in ui.HELP_KEYS:

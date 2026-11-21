@@ -18,7 +18,7 @@ from .. import ui
 
 TITLE = "Runner"
 DESCRIPTION = "Run, jump, dodge, exit!"
-CONTROLS = ("Arrows/WASD move + jump | reach X | p pause | ? help | q menu")
+CONTROLS = ("Arrows/WASD move + jump | reach X | r restart room | p pause | ? help | q menu")
 GAME_ID = "platformer"
 CATEGORY = "ACTION"
 
@@ -367,6 +367,8 @@ def gen_endless_verified(seed, n, tries=25):
 
 class RunState:
     def __init__(self, rows, score=0, endless=None):
+        if not isinstance(rows, (list, tuple)) or not rows:
+            rows = LEVELS[0] if LEVELS else ("#####", "#P X#", "#####")
         self.lv = parse_level(rows)
         self.score = score
         self.endless = endless  # (seed, n) or None
@@ -442,6 +444,20 @@ class RunState:
         """Advance physics by dt seconds. Returns 'dead'/'won'/None."""
         if self.over:
             return "over"
+        try:
+            dt = float(dt)
+        except (TypeError, ValueError):
+            dt = 0.0
+        if dt != dt or dt == float("inf") or dt == float("-inf"):
+            dt = 0.0
+        dt = max(0.0, min(dt, 1.0))
+        try:
+            move = float(move)
+        except (TypeError, ValueError):
+            move = 0.0
+        if move != move:  # NaN input drifts nowhere
+            move = 0.0
+        move = max(-1.0, min(move, 1.0))
         self.tick += 1
         s = self.solids()
         # moving platform carry
@@ -555,6 +571,11 @@ def new_state(level=0, score=0, endless=None, seed=None, endless_n=None):
     if endless is not None:
         rows, _ = gen_endless_verified(endless, endless_n or 1)
         return RunState(rows, score=score, endless=(endless, endless_n or 1))
+    try:
+        level = int(level)
+    except (TypeError, ValueError):
+        level = 0
+    level = max(0, min(level, len(LEVELS) - 1)) if LEVELS else 0
     rows = LEVELS[level]
     return RunState(rows, score=score)
 
@@ -674,7 +695,7 @@ def select_level(stdscr, score_store, progress):
                     else ui.color(2))
                 ui.safe_addstr(stdscr, top + i - start,
                                max(2, (w - 40) // 2), line[: w - 4], attr)
-            ui.footer(stdscr, "Up/Down pick | Enter play | e endless | "
+            ui.footer(stdscr, "Up/Down pick | Enter play | e endless | ? help | "
                               "q menu")
             stdscr.refresh()
         except curses.error:
@@ -708,6 +729,8 @@ def select_level(stdscr, score_store, progress):
                     return ("endless", None)
             else:
                 return ("level", min(sel, unlocked))
+        elif key in ui.HELP_KEYS:
+            ui.show_help_overlay(stdscr, GAME_ID)
         elif key == curses.KEY_RESIZE:
             continue
 
@@ -736,6 +759,8 @@ def play(stdscr, score_store):
         st = RunState(LEVELS[idx])
         level_idx = idx
     last = time.time()
+    hurt_until = 0.0  # timestamp until which "OUCH!" shows after a death
+    clear_until = 0.0  # timestamp until which "CLEAR!" shows
     while True:
         if ui.too_small(stdscr):
             ui.show_too_small(stdscr)
@@ -757,7 +782,7 @@ def play(stdscr, score_store):
             scores_mod.save(score_store)
             return
         elif key in ui.PAUSE_KEYS:
-            if ui.pause_overlay(stdscr) == "quit":
+            if ui.pause_overlay(stdscr, TITLE) == "quit":
                 return
             try:
                 stdscr.timeout(90)
@@ -775,6 +800,13 @@ def play(stdscr, score_store):
             continue
         if key == curses.KEY_RESIZE:
             continue
+        if key in (ord("r"), ord("R")):
+            keep_score, keep_lives = st.score, st.lives
+            st = RunState(st.lv["rows"], score=keep_score,
+                          endless=st.endless)
+            st.lives = keep_lives
+            last = time.time()
+            continue
         now = time.time()
         dt = min(0.15, max(0.02, now - last))
         last = now
@@ -785,7 +817,8 @@ def play(stdscr, score_store):
             move = 0
         jump = key in JUMP_KEYS or key == curses.KEY_UP
         # held-key movement: poll again without blocking for smoothness
-        st.step(dt, move=move, jump=jump)
+        if st.step(dt, move=move, jump=jump) == "dead":
+            hurt_until = time.time() + 1.0
         if st.over and st.won:
             if kind == "endless":
                 st.score += 0
@@ -810,6 +843,7 @@ def play(stdscr, score_store):
                     endless_n = 1
                 else:
                     level_idx += 1
+                    clear_until = time.time() + 1.2
                     st = RunState(LEVELS[level_idx], score=st.score)
                 last = time.time()
         if st.over and not st.won:
@@ -830,11 +864,20 @@ def play(stdscr, score_store):
             pass
         if kind == "endless":
             label = room_label(0, total, st)
+            ouch = " OUCH! %d %s left" % (
+                st.lives, "life" if st.lives == 1 else "lives") \
+                if time.time() < hurt_until else ""
             draw(stdscr, st, "Generated level %d" % endless_n +
-                 " | " + label)
+                 " | " + label + ouch)
         else:
-            draw(stdscr, st, room_label(level_idx, total, st))
-        ui.game_footer(stdscr, CONTROLS + " | room score %d" % st.score)
+            ouch = " OUCH! %d %s left" % (
+                st.lives, "life" if st.lives == 1 else "lives") \
+                if time.time() < hurt_until else ""
+            clear = " CLEAR! +%d" % ROOM_BONUS \
+                if time.time() < clear_until else ""
+            draw(stdscr, st, room_label(level_idx, total, st) + ouch +
+                 clear)
+        ui.game_footer(stdscr, CONTROLS + " | score %d" % st.score)
         try:
             stdscr.refresh()
         except curses.error:

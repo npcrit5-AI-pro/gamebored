@@ -7,7 +7,7 @@ from .. import ui
 
 TITLE = "Tic-Tac-Toe"
 DESCRIPTION = "Beat the computer at X/O"
-CONTROLS = "Arrows move | Space/Enter place | 1-9 quick | p pause | q menu"
+CONTROLS = "Arrows move | Space/Enter place | 1-9 quick | p pause | ? help | q menu"
 GAME_ID = "tictactoe"
 CATEGORY = "CLASSIC"
 
@@ -73,6 +73,8 @@ class TicState:
         self.message = "You are X. Good luck!"
 
     def human(self, i):
+        if not isinstance(i, int) or not 0 <= i < 9:
+            return False
         if self.board[i] or winner(self.board):
             return False
         self.board[i] = "X"
@@ -180,7 +182,7 @@ def play(stdscr, score_store):
         if key in ui.QUIT_KEYS:
             return
         elif key in ui.PAUSE_KEYS:
-            if ui.pause_overlay(stdscr) == "quit":
+            if ui.pause_overlay(stdscr, TITLE) == "quit":
                 return
             continue
         if key in ui.HELP_KEYS:

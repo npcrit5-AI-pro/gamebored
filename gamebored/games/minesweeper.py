@@ -9,7 +9,7 @@ from .. import ui
 
 TITLE = "Minesweeper"
 DESCRIPTION = "Clear mines without boom"
-CONTROLS = "Arrows move | Space/Enter dig | f flag | p pause | q menu"
+CONTROLS = "Arrows move | Space/Enter dig | f flag | p pause | ? help | q menu"
 GAME_ID = "minesweeper"
 CATEGORY = "PUZZLE"
 
@@ -62,7 +62,12 @@ class MineState:
         self.started = True
         self._compute_counts()
 
+    def _in_bounds(self, r, c):
+        return 0 <= r < self.rows and 0 <= c < self.cols
+
     def reveal(self, r, c):
+        if not self._in_bounds(r, c):
+            return
         if self.over or self.flagged[r][c] or self.revealed[r][c]:
             return
         if not self.started:
@@ -91,6 +96,8 @@ class MineState:
             self.elapsed = time.time() - self.start_time
 
     def toggle_flag(self, r, c):
+        if not self._in_bounds(r, c):
+            return
         if self.over or self.revealed[r][c]:
             return
         self.flagged[r][c] = not self.flagged[r][c]
@@ -192,7 +199,7 @@ def play(stdscr, score_store):
         if key in ui.QUIT_KEYS:
             return
         elif key in ui.PAUSE_KEYS:
-            if ui.pause_overlay(stdscr) == "quit":
+            if ui.pause_overlay(stdscr, TITLE) == "quit":
                 return
             continue
         if key in ui.HELP_KEYS:

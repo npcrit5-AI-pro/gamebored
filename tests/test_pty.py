@@ -176,7 +176,9 @@ WONDER_RE = re.compile(r"BORED WONDERING", re.S)
 PAUSED_RE = re.compile(r"PAUSED", re.S)
 
 
-def test_menu_shows_grouped_entries_and_footer():
+def test_menu_shows_grouped_entries_and_footer(tmp_path, monkeypatch):
+    # Fresh HOME: no remembered menu selection, so the list starts at top.
+    monkeypatch.setitem(ENV, "HOME", str(tmp_path))
     child = spawn()
     try:
         expect_menu(child)
