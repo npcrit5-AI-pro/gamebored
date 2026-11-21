@@ -18,7 +18,7 @@ from .. import ui
 
 TITLE = "Runner"
 DESCRIPTION = "Run, jump, dodge, exit!"
-CONTROLS = ("Arrows/WASD move + jump | reach X | r room | p pause | ? help | q menu")
+CONTROLS = ("Arrows/WASD move + jump | reach X | r restart room | p pause | ? help | q menu")
 GAME_ID = "platformer"
 CATEGORY = "ACTION"
 

@@ -59,7 +59,7 @@ next launch.
 | a | Frogger — hop across the traffic! | Arrows/WASD hop |
 | b | Simon — repeat the memory sequence | Watch, then press 1-4 |
 | c | Sokoban — push boxes onto targets (205 rooms!) | Arrows/WASD push, R restart, U undo |
-| f | Runner — run, jump, dodge, grab the exit! | Arrows/WASD move + jump, R room |
+| f | Runner — run, jump, dodge, grab the exit! | Arrows/WASD move + jump, R restart room |
 | d | Connect Four — line up four vs the CPU | Left/Right, Space/Enter or 1-7 |
 | e | Flappy — flap through the pipes! | Space/Up flap |
 | W | Bored Wondering — search the web, keyless | Type + Enter, Up/Down pick |

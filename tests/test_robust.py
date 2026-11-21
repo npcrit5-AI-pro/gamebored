@@ -663,7 +663,7 @@ def test_round44_runner_restart_room_keeps_score_and_lives():
     assert fresh.score == keep_score and fresh.lives == keep_lives
     assert (fresh.x, fresh.y) == (float(st.lv["spawn"][0]),
                                   float(st.lv["spawn"][1]))
-    assert "r room" in platformer.CONTROLS
+    assert "r restart room" in platformer.CONTROLS
 
 
 def test_round45_every_game_advertises_pause_help_menu():
@@ -971,3 +971,9 @@ def test_round55_sokoban_footer_names_boxes_home():
     from gamebored.games import sokoban
     src = inspect.getsource(sokoban.play)
     assert "boxes home %d/%d" in src
+
+
+def test_round56_runner_controls_say_restart():
+    """Round 56: Runner CONTROLS say 'r restart room', not cryptic 'r room'."""
+    from gamebored.games import platformer
+    assert "restart" in platformer.CONTROLS
