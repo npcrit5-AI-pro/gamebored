@@ -35,3 +35,15 @@ def test_round2_atomic_save_never_leaves_half_file(tmp_path):
     scores_mod.save({"snake": object()}, path=path)
     with open(path, encoding="utf-8") as fh:
         assert json.load(fh)["snake"]["high"] == 5
+
+
+def test_round3_translator_never_crashes():
+    from gamebored import translator as translator_mod
+    for game in ("snake", "nope", "", None):
+        for raw in ("abc", None, -5, 1e18, float("nan"), float("inf"),
+                    float("-inf"), "10", object()):
+            assert translator_mod.to_bp(game, raw) >= 0
+            assert isinstance(translator_mod.format_score(game, raw), str)
+    assert translator_mod.to_bp("snake", 15) == 1500
+    assert translator_mod.to_bp("nope", 15) == 0
+    assert translator_mod.total_bp({"snake": {"high": "junk"}}) >= 0

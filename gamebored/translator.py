@@ -72,16 +72,25 @@ def to_bp(game_id, raw):
         raw = float(raw)
     except (TypeError, ValueError):
         return 0
+    if not raw == raw or raw in (float("inf"), float("-inf")):
+        return 0  # NaN / Infinity from a corrupt save: worth nothing
     if raw <= 0:
         return 0
-    return int(round(raw * rate_for(game_id)))
+    try:
+        return int(round(raw * rate_for(game_id)))
+    except (OverflowError, ValueError):
+        return 0
 
 
 def _commas(n):
     try:
         n = int(n)
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, OverflowError):
         return "0"
+    if not n == n:  # NaN guard
+        return "0"
+    if n < 0:
+        return "-" + _commas(-n)
     # thousands separators without locale dependency
     s = "%d" % n
     out = ""
