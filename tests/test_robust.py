@@ -677,6 +677,19 @@ def test_round46_picker_shows_best_moves():
     assert any("[locked]" in ln for ln in win.lines)
 
 
+def test_round47_runner_death_costs_one_life_and_warns():
+    from gamebored.games import platformer
+    st = platformer.RunState(platformer.LEVELS[0], score=100)
+    assert st.lives == platformer.LIVES
+    assert st._die() == "dead"
+    assert st.lives == platformer.LIVES - 1 and not st.over
+    assert (st.x, st.y) == (float(st.lv["spawn"][0]),
+                            float(st.lv["spawn"][1]))
+    st.lives = 1
+    assert st._die() == "dead-over"
+    assert st.over and not st.won
+
+
 def test_round37_room_pickers_survive_key_mashing():
     import curses
     from gamebored.games import sokoban, platformer

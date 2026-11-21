@@ -757,6 +757,7 @@ def play(stdscr, score_store):
         st = RunState(LEVELS[idx])
         level_idx = idx
     last = time.time()
+    hurt_until = 0.0  # timestamp until which "OUCH!" shows after a death
     while True:
         if ui.too_small(stdscr):
             ui.show_too_small(stdscr)
@@ -813,7 +814,8 @@ def play(stdscr, score_store):
             move = 0
         jump = key in JUMP_KEYS or key == curses.KEY_UP
         # held-key movement: poll again without blocking for smoothness
-        st.step(dt, move=move, jump=jump)
+        if st.step(dt, move=move, jump=jump) == "dead":
+            hurt_until = time.time() + 1.0
         if st.over and st.won:
             if kind == "endless":
                 st.score += 0
@@ -858,10 +860,16 @@ def play(stdscr, score_store):
             pass
         if kind == "endless":
             label = room_label(0, total, st)
+            ouch = " OUCH! %d %s left" % (
+                st.lives, "life" if st.lives == 1 else "lives") \
+                if time.time() < hurt_until else ""
             draw(stdscr, st, "Generated level %d" % endless_n +
-                 " | " + label)
+                 " | " + label + ouch)
         else:
-            draw(stdscr, st, room_label(level_idx, total, st))
+            ouch = " OUCH! %d %s left" % (
+                st.lives, "life" if st.lives == 1 else "lives") \
+                if time.time() < hurt_until else ""
+            draw(stdscr, st, room_label(level_idx, total, st) + ouch)
         ui.game_footer(stdscr, CONTROLS + " | room score %d" % st.score)
         try:
             stdscr.refresh()
