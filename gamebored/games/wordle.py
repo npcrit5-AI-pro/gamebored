@@ -76,7 +76,10 @@ def feedback(answer, guess):
 class WordleState:
     def __init__(self, answer=None, seed=None):
         rng = random.Random(seed)
-        self.answer = answer or rng.choice(ANSWERS)
+        if not isinstance(answer, str) or len(answer) != WORD_LEN \
+                or not answer.isalpha():
+            answer = None
+        self.answer = (answer or rng.choice(ANSWERS)).upper()
         self.rows = []  # (guess, feedback)
         self.current = ""
         self.over = False

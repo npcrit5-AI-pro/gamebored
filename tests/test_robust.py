@@ -319,3 +319,22 @@ def test_round22_cli_flags_do_not_launch_curses(capsys):
     assert "Snake" in capsys.readouterr().out
     assert main_mod.main(["--bogus"]) == 2
     assert "Usage" in capsys.readouterr().out
+
+
+def test_round23_word_answers_normalized():
+    from gamebored.games import hangman, wordle
+    st = hangman.HangState(word="apple")
+    assert st.word == "APPLE"
+    assert st.guess("a") is True
+    st2 = hangman.HangState(word="123")
+    assert st2.word.isalpha() and st2.word.isupper()
+    st3 = hangman.HangState(word=None, seed=1)
+    assert st3.word.isupper()
+    w = wordle.WordleState(answer="crane")
+    assert w.answer == "CRANE"
+    w2 = wordle.WordleState(answer="toolongword")
+    assert len(w2.answer) == wordle.WORD_LEN
+    w3 = wordle.WordleState(answer="CRANE")
+    for ch in "CRANE":
+        w3.type_letter(ch)
+    assert w3.submit() is True and w3.won

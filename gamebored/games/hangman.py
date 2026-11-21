@@ -47,7 +47,9 @@ def is_won(word, guessed):
 class HangState:
     def __init__(self, word=None, seed=None):
         rng = random.Random(seed)
-        self.word = word or rng.choice(WORDS)
+        if not isinstance(word, str) or not word.isalpha():
+            word = None
+        self.word = (word or rng.choice(WORDS)).upper()
         self.guessed = set()
         self.wrong = 0
 
