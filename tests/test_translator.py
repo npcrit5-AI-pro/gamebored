@@ -28,6 +28,7 @@ TYPICAL_GOOD_RAW = {
     "sokoban": 800,     # a room or two
     "connect4": 150,    # one win
     "flappy": 15,       # 15 pipes threaded
+    "platformer": 750,  # a few rooms + coins
 }
 
 
@@ -38,7 +39,7 @@ class TestTranslator(unittest.TestCase):
 
     def test_every_game_has_a_positive_rate(self):
         game_ids = [mod.GAME_ID for mod in GAMES]
-        self.assertEqual(len(game_ids), 15)
+        self.assertEqual(len(game_ids), 16)
         for gid in game_ids:
             self.assertIn(gid, translator.CONVERSIONS,
                           "no conversion rate for %s" % gid)

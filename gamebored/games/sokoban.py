@@ -1,44 +1,31 @@
 """Sokoban: push every box onto a target.
 
 Walk into boxes to push them (never pull). Park all boxes on the glowing
-targets to clear each of the 3 rooms. R restarts the room. Your raw score
-is 100 points per box plus 500 per cleared room.
+targets to clear each room. 205 built-in rooms: 3 tutorial rooms, a curated
+Microban selection (David W. Skinner, freely redistributable with credit),
+and GameBored reverse-pulled extras. Finish them all to unlock endless
+procedurally generated rooms. R restarts the room. Your raw score is
+100 points per box plus 500 per cleared room.
+
+Only the standard library is used.
 """
 
 import curses
+import random
 
+from .. import progress as progress_mod
 from .. import scores as scores_mod
 from .. import ui
+from . import sokoban_data as data_mod
+from . import sokoban_solver as solver_mod
 
 TITLE = "Sokoban"
 DESCRIPTION = "Push boxes onto targets"
-CONTROLS = "Arrows/WASD push | r restart room | p pause | ? help | q menu"
+CONTROLS = ("Arrows/WASD push | r restart | p pause | ? help | q menu")
 GAME_ID = "sokoban"
 CATEGORY = "PUZZLE"
 
-LEVELS = (
-    (
-        "#######",
-        "#  .  #",
-        "#  $  #",
-        "#  @  #",
-        "#######",
-    ),
-    (
-        "########",
-        "#  . . #",
-        "#  $ $ #",
-        "#   @  #",
-        "########",
-    ),
-    (
-        "#########",
-        "# . . . #",
-        "# $ $ $ #",
-        "#   @   #",
-        "#########",
-    ),
-)
+LEVELS = data_mod.LEVELS
 
 BOX_POINTS = 100
 ROOM_BONUS = 500
@@ -47,32 +34,31 @@ ROOM_BONUS = 500
 class SokState:
     """Headless box-pushing logic: no curses calls in here."""
 
-    def __init__(self, level=0):
+    def __init__(self, level=0, rows=None, endless=None):
         self.level = level
+        self.endless = endless  # (seed, n) or None
         self.moves = 0
         self.score = 0
         self.over = False
         self.won = False
-        self._load(level)
+        if rows is not None:
+            self._load_row(None, endless_rows=rows)
+        elif endless is not None:
+            self._load_row(None,
+                           endless_rows=gen_endless_verified(endless[0],
+                                                             endless[1]))
+        else:
+            self._load_row(level)
 
-    def _load(self, level):
-        rows = LEVELS[level]
-        self.walls = set()
-        self.targets = set()
-        self.boxes = set()
-        self.player = (1, 1)
-        for y, row in enumerate(rows):
-            for x, ch in enumerate(row):
-                if ch == "#":
-                    self.walls.add((x, y))
-                elif ch == ".":
-                    self.targets.add((x, y))
-                elif ch == "$":
-                    self.boxes.add((x, y))
-                elif ch == "@":
-                    self.player = (x, y)
-        self.height = len(rows)
-        self.width = max(len(r) for r in rows)
+    def _load_row(self, level, endless_rows=None):
+        rows = endless_rows if endless_rows is not None else LEVELS[level]
+        walls, targets, boxes, player, W, H = solver_mod.parse(rows)
+        self.walls = walls
+        self.targets = targets
+        self.boxes = boxes
+        self.player = player if player is not None else (1, 1)
+        self.height = H
+        self.width = W
 
     @property
     def boxes_home(self):
@@ -100,29 +86,130 @@ class SokState:
         self.moves += 1
         if self.solved:
             self.score += len(self.boxes) * BOX_POINTS + ROOM_BONUS
-            if self.level + 1 >= len(LEVELS):
-                self.over = True
-                self.won = True
-            else:
-                self.level += 1
-                self.moves = 0
-                self._load(self.level)
+            self.over = True
+            self.won = True
         return True
 
     def restart(self):
         self.moves = 0
-        self._load(self.level)
+        self.over = False
+        self.won = False
+        self.score = 0
+        if self.endless is None:
+            self._load_row(self.level)
+        else:
+            seed, n = self.endless
+            rows = gen_endless_verified(seed, n)
+            self._load_row(None, endless_rows=rows)
 
 
 def new_state(level=0):
     return SokState(level)
 
 
-def draw(screen, st, total_score):
+# --------------------------------------------------------------------------
+# Endless generated rooms (seeded reverse-pulls, solver-verified)
+# --------------------------------------------------------------------------
+
+def gen_endless_rows(seed, n):
+    """Seeded endless room n (difficulty rises with n)."""
+    n = int(n)
+    rng = random.Random("sokoban:%s:%s" % (seed, n))
+    d = min(1.0, 0.15 + 0.05 * n)
+    W = min(19, 9 + n // 4)
+    H = min(13, 8 + n // 5)
+    nboxes = min(5, 2 + n // 6)
+    walls = set()
+    for x in range(W):
+        walls.add((x, 0))
+        walls.add((x, H - 1))
+    for y in range(H):
+        walls.add((0, y))
+        walls.add((W - 1, y))
+    floors = [(x, y) for y in range(1, H - 1) for x in range(1, W - 1)]
+    targets = set(rng.sample(floors, nboxes))
+    boxes = set(targets)
+    player = rng.choice([c for c in floors if c not in boxes])
+    pulls = min(90, 20 + 4 * n)
+
+    def free(c):
+        return c not in walls and c not in boxes
+
+    for _ in range(pulls):
+        if rng.random() < 0.45:
+            cands = []
+            for dx, dy in ((0, -1), (0, 1), (-1, 0), (1, 0)):
+                adj = (player[0] + dx, player[1] + dy)
+                behind = (player[0] - dx, player[1] - dy)
+                if adj in boxes and behind not in walls and behind not in boxes:
+                    cands.append((dx, dy))
+            if cands:
+                dx, dy = rng.choice(cands)
+                adj = (player[0] + dx, player[1] + dy)
+                behind = (player[0] - dx, player[1] - dy)
+                boxes.discard(adj)
+                boxes.add(player)
+                player = behind
+                continue
+        opts = [(player[0] + dx, player[1] + dy)
+                for dx, dy in ((0, -1), (0, 1), (-1, 0), (1, 0))]
+        opts = [c for c in opts if free(c)]
+        if opts:
+            player = rng.choice(opts)
+    if not boxes or frozenset(boxes) <= targets:
+        return None  # scrambled back to solved: not a puzzle
+    rows = []
+    for y in range(H):
+        row = ""
+        for x in range(W):
+            c = (x, y)
+            if c in walls:
+                row += "#"
+            elif c == player and c in targets:
+                row += "+"
+            elif c == player:
+                row += "@"
+            elif c in boxes and c in targets:
+                row += "*"
+            elif c in boxes:
+                row += "$"
+            elif c in targets:
+                row += "."
+            else:
+                row += " "
+        rows.append(row)
+    return tuple(rows)
+
+
+def gen_endless_verified(seed, n, tries=30):
+    """Return solver-verified endless rows for (seed, n)."""
+    for k in range(tries):
+        rows = gen_endless_rows(seed if k == 0 else "%s#%d" % (seed, k), n)
+        if rows is None:
+            continue
+        if solver_mod.solve_pushes(rows, cap=20000,
+                                   time_limit=2.0) is not None:
+            return rows
+    # fallback: tiny 1-box room (trivially solvable)
+    return (
+        "#####",
+        "# . #",
+        "# $ #",
+        "# @ #",
+        "#####",
+    )
+
+
+def draw(screen, st, total_score, label=None):
     h, w = screen.getmaxyx()
-    ui.centered(screen, 1, "SOKOBAN  room:%d/%d  moves:%d  score:%d" % (
-        st.level + 1, len(LEVELS), st.moves, total_score),
-        ui.color(3) | curses.A_BOLD)
+    if label is None:
+        if st.endless is not None:
+            label = "SOKOBAN end:%d seed:%s moves:%d score:%d" % (
+                st.endless[1], st.endless[0], st.moves, total_score)
+        else:
+            label = "SOKOBAN room:%d/%d moves:%d score:%d" % (
+                st.level + 1, len(LEVELS), st.moves, total_score)
+    ui.centered(screen, 1, label, ui.color(3) | curses.A_BOLD)
     y0 = max(2, (h - st.height) // 2)
     x0 = max(0, (w - st.width) // 2)
     for y in range(st.height):
@@ -151,6 +238,88 @@ KEYMAP = {
 }
 
 
+def select_level(stdscr, score_store, progress):
+    """Level-select: pick an unlocked room, or endless once unlocked."""
+    total = len(LEVELS)
+    unlocked = progress_mod.get_unlocked(progress, GAME_ID, total)
+    endless_ok = progress_mod.endless_unlocked(progress, GAME_ID, total)
+    sel = min(unlocked, total - 1)
+    mode = "level"
+    while True:
+        if ui.too_small(stdscr):
+            ui.show_too_small(stdscr)
+            try:
+                key = stdscr.getch()
+            except curses.error:
+                key = -1
+            if key in ui.QUIT_KEYS:
+                return None
+            continue
+        try:
+            stdscr.clear()
+            h, w = stdscr.getmaxyx()
+            ui.header(stdscr, "SOKOBAN: PICK A ROOM",
+                      "%d rooms + endless" % total if endless_ok else
+                      "clear rooms to unlock more")
+            top = 3
+            visible = max(1, h - top - 3)
+            # show window around selection
+            cur = sel if mode == "level" else total
+            start = max(0, min(cur - visible // 2, total + 1 - visible))
+            for i in range(start, min(total + 1, start + visible)):
+                if i < total:
+                    locked = i > unlocked
+                    line = "room %3d%s" % (i + 1,
+                                           " [locked]" if locked else "")
+                else:
+                    locked = not endless_ok
+                    line = "endless mode%s" % (
+                        " (generated forever)" if endless_ok
+                        else " [finish all %d to unlock]" % total)
+                line = ("-> " if i == cur else "   ") + line
+                attr = ui.color(7) if locked else (
+                    curses.A_REVERSE | curses.A_BOLD if i == cur
+                    else ui.color(3))
+                ui.safe_addstr(stdscr, top + i - start,
+                               max(2, (w - 40) // 2), line[: w - 4], attr)
+            ui.footer(stdscr, "Up/Down pick | Enter play | e endless | "
+                              "q menu")
+            stdscr.refresh()
+        except curses.error:
+            pass
+        try:
+            key = stdscr.getch()
+        except curses.error:
+            key = -1
+        if key in ui.QUIT_KEYS:
+            return None
+        if key == curses.KEY_UP:
+            if mode == "level":
+                sel = (sel - 1) % (unlocked + 1)
+            else:
+                mode = "level"
+        elif key == curses.KEY_DOWN:
+            if mode == "level":
+                if sel < unlocked:
+                    sel += 1
+                elif endless_ok:
+                    mode = "endless"
+            else:
+                mode = "level"
+                sel = 0
+        elif key in (ord("e"), ord("E")):
+            if endless_ok:
+                return ("endless", None)
+        elif key in (10, 13, curses.KEY_ENTER, ord(" ")):
+            if mode == "endless":
+                if endless_ok:
+                    return ("endless", None)
+            else:
+                return ("level", min(sel, unlocked))
+        elif key == curses.KEY_RESIZE:
+            continue
+
+
 def play(stdscr, score_store):
     curses.curs_set(0)
     try:
@@ -158,7 +327,21 @@ def play(stdscr, score_store):
         stdscr.timeout(-1)
     except curses.error:
         pass
-    st = SokState()
+    progress = progress_mod.load()
+    total = len(LEVELS)
+    pick = select_level(stdscr, score_store, progress)
+    if pick is None:
+        return
+    kind, idx = pick
+    if kind == "endless":
+        seed = str(random.Random().randrange(1 << 30))
+        n = 1
+        st = SokState(rows=gen_endless_verified(seed, n), endless=(seed, n))
+        total_score = 0
+    else:
+        st = SokState(idx)
+        total_score = 0
+        level_idx = idx
     while True:
         if ui.too_small(stdscr):
             ui.show_too_small(stdscr)
@@ -173,7 +356,12 @@ def play(stdscr, score_store):
             stdscr.clear()
         except curses.error:
             pass
-        draw(stdscr, st, st.score)
+        if kind == "endless":
+            draw(stdscr, st, total_score,
+                 label="Generated level %d seed:%s moves:%d score:%d" % (
+                     n, seed, st.moves, total_score))
+        else:
+            draw(stdscr, st, total_score)
         ui.game_footer(stdscr, CONTROLS + " | home %d/%d" % (
             st.boxes_home, len(st.boxes)))
         try:
@@ -181,24 +369,35 @@ def play(stdscr, score_store):
         except curses.error:
             pass
         if st.over:
-            entry = scores_mod.get_entry(score_store, GAME_ID)
-            _, is_high = scores_mod.record_play(score_store, GAME_ID,
-                                                st.score, won=st.won)
-            scores_mod.save(score_store)
-            ui.game_over_screen(
-                stdscr, TITLE,
-                ["All rooms cleared, warehouse hero!" if st.won
-                 else "Room %d unfinished." % (st.level + 1)],
-                score=st.score, best=max(entry["high"], st.score),
-                is_new_high=is_high, game_id=GAME_ID, won=st.won)
-            return
+            total_score += st.score
+            if kind == "endless":
+                n += 1
+                st = SokState(rows=gen_endless_verified(seed, n),
+                              endless=(seed, n))
+                st.score = 0
+                continue
+            progress = progress_mod.load()
+            progress_mod.record_level_complete(progress, GAME_ID,
+                                               level_idx, total)
+            if level_idx + 1 >= total:
+                seed = str(random.Random().randrange(1 << 30))
+                n = 1
+                kind = "endless"
+                st = SokState(rows=gen_endless_verified(seed, n),
+                              endless=(seed, n))
+                st.score = 0
+                continue
+            level_idx += 1
+            st = SokState(level_idx)
+            st.score = 0
+            continue
         try:
             key = stdscr.getch()
         except curses.error:
             key = -1
         if key in ui.QUIT_KEYS:
-            scores_mod.record_play(score_store, GAME_ID, st.score,
-                                   won=st.won)
+            scores_mod.record_play(score_store, GAME_ID, total_score,
+                                   won=False)
             scores_mod.save(score_store)
             return
         elif key in ui.PAUSE_KEYS:

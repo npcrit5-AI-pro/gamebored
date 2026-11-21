@@ -13,7 +13,7 @@ from gamebored.games import hangman, pong, invaders, breakout, wordle
 
 
 def test_registry_has_fifteen_games():
-    assert len(GAMES) == 15
+    assert len(GAMES) == 16
     for mod in GAMES:
         for attr in ("TITLE", "DESCRIPTION", "CONTROLS", "GAME_ID", "play"):
             assert hasattr(mod, attr), "%s missing %s" % (mod, attr)

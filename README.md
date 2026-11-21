@@ -1,6 +1,6 @@
-# GameBored v1.2.0
+# GameBored v1.3.0
 
-GameBored: a colorful terminal arcade menu with 15 games plus Bored
+GameBored: a colorful terminal arcade menu with 16 games plus Bored
 Wondering, a keyless web search inside the app. Frederick types
 `GameBored` in a shell, picks a game, plays, and lands back at the menu.
 `q`/`Esc` quits anywhere, `p` pauses, `?` helps.
@@ -57,13 +57,22 @@ hotkey.
 | 0 | Word Guess — 6 tries (1,000+ words) | Type + Enter, Backspace |
 | a | Frogger — hop across the traffic! | Arrows/WASD hop |
 | b | Simon — repeat the memory sequence | Watch, then press 1-4 |
-| c | Sokoban — push boxes onto targets | Arrows/WASD push, R restart |
+| c | Sokoban — push boxes onto targets (205 rooms!) | Arrows/WASD push, R restart |
+| f | Runner — run, jump, dodge, grab the exit! | Arrows/WASD move + jump |
 | d | Connect Four — line up four vs the CPU | Left/Right, Space/Enter or 1-7 |
 | e | Flappy — flap through the pipes! | Space/Up flap |
 | W | Bored Wondering — search the web, keyless | Type + Enter, Up/Down pick |
 | H | High Scores — every best in raw + Bored Points | Up/Down scroll |
 | T | Score Translator — raw number → BP for any game | Pick game, type number |
 | ? | Help — how to play everything | Any key back |
+
+Sokoban and Runner open a room picker: choose any unlocked room, or jump
+straight into endless mode once you have cleared every built-in room.
+Progress (highest room unlocked) is saved between sessions in
+`~/.local/share/gamebored/progress.json`. After the last built-in room,
+both games switch to seeded, procedurally generated rooms that go on
+forever with slowly rising difficulty (`Generated level N` shows the
+room number and seed).
 
 Every game shows its controls on screen plus the universal keys (`p`
 pause, `?` help, `q` menu), ends with a friendly game-over panel (score in
@@ -98,6 +107,24 @@ GameBored that touches the network (the 2,853-word and 1,047-word lists in
 Text renders of the menu, Wondering, help, and every game live in
 `docs/screenshots/` (regenerate with `python3 tools/capture.py`).
 
+## Level credits
+
+- Sokoban ships 205 built-in rooms: the 3 original GameBored tutorial
+  rooms, a curated, solver-verified subset of **Microban by David W. Skinner**
+  (155 puzzles, revised April 2000 — freely redistributable with credit,
+  http://users.bentonrea.com/~sasquatch/sokoban/), and GameBored
+  reverse-pulled extra rooms. Only the level layouts are borrowed; the
+  parser, renderer, solver, progression, and endless generator are original.
+- Runner's 60 rooms are original GameBored designs across six difficulty
+  zones (pits, platforms, spikes, enemies, keys + locked doors, moving
+  platforms).
+
+Endless rooms in both games are generated on the fly (seeded): Sokoban by
+reverse-pulling boxes from a solved state (solvable by construction, then
+re-verified with the push-solver, regenerating on failure), Runner by
+chaining platform hops within jump range (re-verified with the reachability
+solver, regenerating on failure).
+
 ## Tests (developers)
 
 Testing-only deps (never needed to play): `pip install -r requirements-test.txt`
@@ -114,8 +141,12 @@ python3 -m pytest tests/ -q
 - `tests/test_search.py` — mocked-network tests for search merge/dedupe and
   per-source error handling, a word-list-offline check, and one optional
   live test skipped when offline.
+- `tests/test_v13.py` — v1.3.0: all 60 Runner rooms beatable, all 205
+  Sokoban rooms solvable (time-boxed push-solver), sampled endless rooms
+  solvable/beatable, progress save/load + endless unlock, translator rate.
 - `tests/test_pty.py` — drives the real app headlessly in a pseudo-terminal
-  (80x24): launches each of the 15 games from the menu, sends gameplay input,
-  quits back to the menu, and exits with status 0; also covers the
-  translator, the new menu/help/Wondering/scores screens, pause + in-game
-  help overlays, tiny-terminal and resize behavior.
+  (80x24): launches each of the 16 games from the menu (including through
+  the Sokoban/Runner room pickers), sends gameplay input, quits back to
+  the menu, and exits with status 0; also covers the translator, the new
+  menu/help/Wondering/scores screens, level-select screens, pause +
+  in-game help overlays, tiny-terminal and resize behavior.

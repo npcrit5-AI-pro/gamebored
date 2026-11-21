@@ -1,6 +1,6 @@
 """GameBored main menu: pick a game, play, come back, quit with q/Esc.
 
-The menu lists 15 games (grouped by category) plus extras: Bored Wondering
+The menu lists 16 games (grouped by category) plus extras: Bored Wondering
 (keyless web search), High Scores (every raw best translated into Bored
 Points, with a combined all-games total), a Score Translator (pick a game,
 type any raw number, see the BP value), and Help.
@@ -22,10 +22,10 @@ LOGO = [
     " \\____|\\__,_|_| |_| |_|\\___|  |___/ \\___/|_| \\___|\\___|\\__,_|",
 ]
 
-SUBTITLE = "Bored? Game on! Pick a game: (v1.2.0)"
+SUBTITLE = "Bored? Game on! Pick a game: (v1.3.0)"
 
 GAME_HOTKEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0",
-                "a", "b", "c", "d", "e"]
+                "a", "b", "c", "d", "e", "f"]
 
 EXTRA_ENTRIES = [
     {"hotkey": "W", "title": "Bored Wondering", "desc": "Search the web, keyless",
@@ -40,9 +40,9 @@ EXTRA_ENTRIES = [
 
 
 def build_entries():
-    """Flat menu entries: 15 games grouped by category, then W/H/T/? extras.
+    """Flat menu entries: 16 games grouped by category, then W/H/T/? extras.
 
-    Hotkeys stay registry-based (1-9,0,a-e in GAMES order) so every game
+    Hotkeys stay registry-based (1-9,0,a-f in GAMES order) so every game
     keeps a stable key; rows are grouped ACTION / PUZZLE / CLASSIC.
     """
     games = []
@@ -156,7 +156,7 @@ def draw_menu(win, selected, score_store, entries=None):
         entry = entries[selected % len(entries)]
         detail = "%s: %s" % (entry["title"], entry["controls"])
         ui.centered(win, h - 2, detail[: w - 2], ui.color(7))
-    ui.footer(win, "Up/Down+j/k move | Enter open | 1-9,0,a-e games | "
+    ui.footer(win, "Up/Down+j/k move | Enter open | 1-9,0,a-f games | "
                    "W search H scores T translator ? help | q quit")
     try:
         win.refresh()
