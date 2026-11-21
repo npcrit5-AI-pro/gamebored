@@ -620,6 +620,21 @@ def test_round43_menu_filter_narrows_and_opens():
     assert any("(0 match" in s for s in win2.status_seen)
 
 
+def test_round44_runner_restart_room_keeps_score_and_lives():
+    from gamebored.games import platformer
+    st = platformer.RunState(platformer.LEVELS[0], score=250)
+    st.lives = 2
+    st.step(0.09, move=1)
+    keep_score, keep_lives = st.score, st.lives
+    fresh = platformer.RunState(st.lv["rows"], score=keep_score,
+                               endless=st.endless)
+    fresh.lives = keep_lives
+    assert fresh.score == keep_score and fresh.lives == keep_lives
+    assert (fresh.x, fresh.y) == (float(st.lv["spawn"][0]),
+                                  float(st.lv["spawn"][1]))
+    assert "r room" in platformer.CONTROLS
+
+
 def test_round37_room_pickers_survive_key_mashing():
     import curses
     from gamebored.games import sokoban, platformer

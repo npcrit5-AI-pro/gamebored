@@ -18,7 +18,7 @@ from .. import ui
 
 TITLE = "Runner"
 DESCRIPTION = "Run, jump, dodge, exit!"
-CONTROLS = ("Arrows/WASD move + jump | reach X | p pause | ? help | q menu")
+CONTROLS = ("Arrows/WASD move + jump | reach X | r room | p pause | ? help | q menu")
 GAME_ID = "platformer"
 CATEGORY = "ACTION"
 
@@ -795,6 +795,13 @@ def play(stdscr, score_store):
             last = time.time()
             continue
         if key == curses.KEY_RESIZE:
+            continue
+        if key in (ord("r"), ord("R")):
+            keep_score, keep_lives = st.score, st.lives
+            st = RunState(st.lv["rows"], score=keep_score,
+                          endless=st.endless)
+            st.lives = keep_lives
+            last = time.time()
             continue
         now = time.time()
         dt = min(0.15, max(0.02, now - last))
