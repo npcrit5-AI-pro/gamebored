@@ -38,6 +38,10 @@ class BreakState:
         self.vy = -1.0
 
     def step(self, move=0):
+        try:
+            move = int(move)
+        except (TypeError, ValueError):
+            move = 0
         self.paddle = max(self.paddle_w // 2,
                           min(self.width - self.paddle_w // 2 - 1,
                               self.paddle + move))

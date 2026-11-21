@@ -346,3 +346,13 @@ def test_round24_pong_ignores_bad_step_input():
     for bad in ("x", None, [1]):
         st.step(bad)  # must not raise
     st.step(999)  # must not raise
+
+
+def test_round25_breakout_ignores_bad_step_input():
+    from gamebored.games import breakout
+    st = breakout.BreakState()
+    for bad in ("x", None, [1]):
+        st.step(bad)  # must not raise
+    for _ in range(200):
+        st.step(1)
+    assert st.score >= 0
