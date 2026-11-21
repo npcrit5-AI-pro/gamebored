@@ -312,7 +312,7 @@ def select_level(stdscr, score_store, progress):
                     else ui.color(3))
                 ui.safe_addstr(stdscr, top + i - start,
                                max(2, (w - 40) // 2), line[: w - 4], attr)
-            ui.footer(stdscr, "Up/Down pick | Enter play | e endless | "
+            ui.footer(stdscr, "Up/Down pick | Enter play | e endless | ? help | "
                               "q menu")
             stdscr.refresh()
         except curses.error:

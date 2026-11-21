@@ -977,3 +977,11 @@ def test_round56_runner_controls_say_restart():
     """Round 56: Runner CONTROLS say 'r restart room', not cryptic 'r room'."""
     from gamebored.games import platformer
     assert "restart" in platformer.CONTROLS
+
+
+def test_round57_picker_footers_advertise_help():
+    """Round 57: room-picker footers advertise '? help' (they answer it)."""
+    import inspect
+    from gamebored.games import sokoban, platformer
+    assert "? help" in inspect.getsource(sokoban.select_level)
+    assert "? help" in inspect.getsource(platformer.select_level)
