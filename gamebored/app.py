@@ -2,13 +2,14 @@
 
 The menu is now a little operating system: a top bar (GameBored OS, live
 clock, BP total), a grid of app icons you drive with the arrow keys
-(Enter opens), groups for games/tools/system, a boot splash, a search
+(Enter opens), groups for games/tools/talk/system, a boot splash, a search
 launcher ('/'), and a bottom status bar with key hints. Narrow terminals
 fall back to a list layout; tiny or monochrome terminals keep working.
 
 16 games (grouped ACTION / PUZZLE / CLASSIC) plus Bored Wondering, High
 Scores, the Score Translator, and Help live on the desktop next to the
-new apps: Notes, Calculator, Clock, Calendar, To-do, Settings, About.
+new apps: Notes, Calculator, Clock, Calendar, To-do, Eliza, Parry,
+Animals, Eliza vs Parry, Settings, About.
 """
 
 import curses
@@ -16,17 +17,21 @@ import os
 import time
 import traceback
 
+from . import animals as animals_mod
 from . import calendarapp as calendar_mod
 from . import calc as calc_mod
 from . import clockapp as clock_mod
+from . import eliza as eliza_mod
 from . import extras as extras_mod
 from . import notes as notes_mod
+from . import parry as parry_mod
 from . import scores as scores_mod
 from . import settings as settings_mod
 from . import sysinfo as sysinfo_mod
 from . import todo as todo_mod
 from . import translator as translator_mod
 from . import ui
+from . import versus as versus_mod
 from . import wondering as wondering_mod
 from . import __version__ as _pkg_version
 from .games import GAMES
@@ -73,6 +78,17 @@ SYSTEM_ENTRIES = [
      "kind": "app", "run": sysinfo_mod.play, "game_id": "about"},
 ]
 
+TALK_ENTRIES = [
+    {"hotkey": "J", "title": "Eliza", "desc": "A caring (mechanical) listener",
+     "kind": "app", "run": eliza_mod.play, "game_id": "eliza"},
+    {"hotkey": "K", "title": "Parry", "desc": "A troubled soul (1972 classic)",
+     "kind": "app", "run": parry_mod.play, "game_id": "parry"},
+    {"hotkey": "U", "title": "Animals", "desc": "Think of an animal, I guess it",
+     "kind": "app", "run": animals_mod.play, "game_id": "animals"},
+    {"hotkey": "V", "title": "Eliza vs Parry", "desc": "1972 ARPANET rematch, live",
+     "kind": "app", "run": versus_mod.play, "game_id": "versus"},
+]
+
 TILE_W = 19
 TILE_H = 4
 GRID_MIN_W = 70
@@ -81,7 +97,7 @@ DESKTOP_MIN_W = 50
 
 
 def build_entries():
-    """Flat entries: 16 games, then Explore, Tools, System apps.
+    """Flat entries: 16 games, then Explore, Tools, Talk, System apps.
 
     Game hotkeys stay registry-based (1-9,0,a-f in GAMES order) so every
     game keeps a stable key; apps add unique letter hotkeys.
@@ -104,6 +120,10 @@ def build_entries():
         entries.append(dict(tool, category="TOOLS",
                             controls=getattr(tool["run"], "__doc__", "")
                             or tool["desc"]))
+    for talk in TALK_ENTRIES:
+        entries.append(dict(talk, category="TALK",
+                            controls=getattr(talk["run"], "__doc__", "")
+                            or talk["desc"]))
     for system in SYSTEM_ENTRIES:
         entries.append(dict(system, category="SYSTEM",
                             controls="Settings and system info | q back"))
@@ -291,7 +311,8 @@ def _draw_desktop(win, selected, score_store, shown, status=None):
         ui.centered(win, h - 2, status[: w - 2],
                     ui.color(3) | curses.A_BOLD)
     ui.footer(win, "Arrows move | Enter open | 1-9,0,a-f games | "
-                   "N notes R calc L clock Y cal O todo S setup I about | "
+                   "N notes R calc L clock Y cal O todo J eliza K parry | "
+                   "U animals V vs S setup I about | "
                    "W search H scores T translator ? help | / filter | q quit")
 
 

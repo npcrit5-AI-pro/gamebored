@@ -21,7 +21,7 @@ import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 
 
-USER_AGENT = "GameBored/1.5.0 (educational terminal search)"
+USER_AGENT = "GameBored/1.6.0 (educational terminal search)"
 TIMEOUT = 4
 FULL_TIMEOUT = 6
 
