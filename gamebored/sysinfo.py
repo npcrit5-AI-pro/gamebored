@@ -5,6 +5,8 @@ import sys
 import time
 
 from . import __version__
+from . import animals as animals_mod
+from . import eliza_script as eliza_script_mod
 from . import storage as storage_mod
 from . import ui
 from .games import GAMES
@@ -21,6 +23,11 @@ def info_lines(width=80):
         "",
         "Games on board: %d" % len(GAMES),
         "Game list: " + ", ".join(mod.TITLE for mod in GAMES),
+        "Talk apps: Eliza (DOCTOR script: %d keywords, %d replies), "
+        "Parry, Animals (%d animals)" % (
+            eliza_script_mod.keyword_count(),
+            eliza_script_mod.reassembly_count(),
+            animals_mod.count_animals(animals_mod.seed_tree())),
         "",
         "Data home: %s" % storage_mod.app_dir(),
         "Storage used: %s" % _human_bytes(storage_mod.data_size_bytes()),

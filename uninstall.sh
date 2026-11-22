@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # GameBored uninstaller: removes the home install + launchers.
-# Your data (scores, progress, notes, to-dos, settings) is backed up
-# first, and the next install restores it.
+# Your data (scores, progress, notes, to-dos, settings, Eliza memory,
+# Animals tree) is backed up first, and the next install restores it.
 set -euo pipefail
 
 DEST="$HOME/.local/share/gamebored"
@@ -28,6 +28,8 @@ backup_file "todos.json" "gamebored-todos-backup.json"
 backup_file "settings.json" "gamebored-settings-backup.json"
 backup_file "calc.json" "gamebored-calc-backup.json"
 backup_file "wonder_cache.json" "gamebored-wonder-cache-backup.json"
+backup_file "eliza_memory.json" "gamebored-eliza-memory-backup.json"
+backup_file "animals_tree.json" "gamebored-animals-tree-backup.json"
 if [[ -d "$DEST/notes" ]]; then
   rm -rf "$HOME/.local/share/gamebored-notes-backup"
   cp -r "$DEST/notes" "$HOME/.local/share/gamebored-notes-backup"

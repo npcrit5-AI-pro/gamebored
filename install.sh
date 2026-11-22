@@ -27,7 +27,7 @@ rm -rf "$DEST/gamebored"
 cp -r "$SRC_DIR/gamebored" "$DEST/gamebored"
 # Restore user data kept by a previous uninstall, if any.
 # (scores, room progress, notes, to-dos, calculator history, search cache,
-# settings - reinstalls never wipe your stuff.)
+# settings, Eliza memory, Animals tree - reinstalls never wipe your stuff.)
 if [[ -f "$HOME/.local/share/gamebored-scores-backup.json" && ! -f "$DEST/scores.json" ]]; then
   cp "$HOME/.local/share/gamebored-scores-backup.json" "$DEST/scores.json"
   echo "High scores restored from backup."
@@ -48,6 +48,8 @@ restore_file "gamebored-todos-backup.json" "todos.json"
 restore_file "gamebored-settings-backup.json" "settings.json"
 restore_file "gamebored-calc-backup.json" "calc.json"
 restore_file "gamebored-wonder-cache-backup.json" "wonder_cache.json"
+restore_file "gamebored-eliza-memory-backup.json" "eliza_memory.json"
+restore_file "gamebored-animals-tree-backup.json" "animals_tree.json"
 if [[ -d "$HOME/.local/share/gamebored-notes-backup" && ! -d "$DEST/notes" ]]; then
   cp -r "$HOME/.local/share/gamebored-notes-backup" "$DEST/notes"
   echo "Notes restored from backup."

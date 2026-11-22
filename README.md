@@ -1,7 +1,9 @@
-# GameBored v1.5.0 — now it's an OS
+# GameBored v1.6.0 — now it talks back
 
 GameBored: a tiny operating system for the terminal, with 16 games plus
-Bored Wondering, a keyless web search inside the app. Frederick types
+Bored Wondering, a keyless web search inside the app, and a new Talk group
+(Eliza, Parry, Animals, Eliza vs Parry) of classic conversational programs.
+Frederick types
 `GameBored` in a shell, lands on the GameBored OS desktop, picks an app
 with the arrow keys, plays, and lands back at the desktop. `q`/`Esc`
 quits anywhere, `p` pauses, `?` helps.
@@ -30,8 +32,8 @@ GameBored      # or: gamebored
 ```
 
 Scores live in `~/.local/share/gamebored/scores.json`; notes, to-dos,
-calculator history, the search cache, and settings live next to them.
-Reinstalls restore all of it.
+calculator history, the search cache, settings, Eliza memory, and the
+Animals tree live next to them. Reinstalls restore all of it.
 
 ## Uninstall
 
@@ -40,14 +42,14 @@ Reinstalls restore all of it.
 ```
 
 Uninstall backs up your scores, room progress, notes, to-dos, calculator
-history, search cache, and settings first — the next `install.sh`
+history, search cache, settings, Eliza memory, and the Animals tree first — the next `install.sh`
 restores everything.
 
 ## The desktop (GameBored OS)
 
 A top bar shows `GameBored OS`, a live clock, and your combined BP total.
 Below it sits a grid of app icons (ASCII tiles with hotkey + name) grouped
-by section (ACTION / PUZZLE / CLASSIC games, EXPLORE, TOOLS, SYSTEM), and a
+by section (ACTION / PUZZLE / CLASSIC games, EXPLORE, TOOLS, TALK, SYSTEM), and a
 bottom status bar that always shows the keys. Move with the arrow keys
 (`Up/Down/Left/Right`, `j/k` also work up/down), open with `Enter`, jump
 straight there with a hotkey, type `/` to filter every app by name, and
@@ -83,6 +85,10 @@ full-contrast selection instead of colors.
 | L | Clock — wall clock, stopwatch, timer | 1/2/3 modes, Space runs |
 | Y | Calendar — month at a glance | Arrows move, PgUp/PgDn months |
 | O | To-do — stuff to get done | a add, Space check, d delete |
+| J | Eliza — a caring (mechanical) listener | Type + Enter, PgUp/PgDn scroll, help save quit |
+| K | Parry — a troubled soul (1972 classic) | Type + Enter, mood bars react to you |
+| U | Animals — think of an animal, I guess it | y/n answers, it learns new animals |
+| V | Eliza vs Parry — 1972 ARPANET rematch, live | q stops the show |
 | S | Settings — themes, CPU pause, splash | Arrows + Left/Right |
 | I | About — version, games, storage used | Any key back |
 
@@ -110,6 +116,40 @@ wobbly memory of the ball instead of tracking it perfectly. The pause is
 configurable in Settings (on/off plus relaxed/normal/brisk speed), and it
 is fully disabled when `GAMEBORED_NO_CPU_DELAY=1` is set so automated tests
 stay fast.
+
+## Talk group: Eliza, Parry, Animals (J/K/U/V)
+
+Four classic conversational programs, all offline and stdlib-only, in a new
+`TALK` desktop group with the same scrollable chat UI (`PgUp`/`PgDn`
+scrolls, `Up`/`Dn` recalls input history, `help`/`save`/`quit` work inside
+every chat, and `q` always leaves).
+
+- **Eliza (J)** — a faithful Weizenbaum DOCTOR-therapy engine: keywords with
+  ranks, decomposition/reassembly rules, pronoun reflection (`I`→`you`,
+  `my`→`your`), synonym groups, a memory stack for `my` statements, cycling
+  reassemblies, and `xnone` fallbacks. The script (`gamebored/eliza_script.py`,
+  117 keywords and 452 reassembly rules — about double the classic) is a
+  plain data module, so it is easy to extend. Upgraded: it remembers facts
+  you tell it (name, likes, family members) in `eliza_memory.json` and
+  greets you by name next visit, refers back to earlier topics, handles
+  greetings/goodbyes/questions, never repeats the same reply twice in a
+  row, and pauses like a person (`cpu.py` think delay).
+- **Parry (K)** — the classic 1972 paranoid patient: simulated
+  anger/fear/mistrust levels shift with what you say (hostility raises
+  anger, threats raise fear, kindness lowers mistrust), shown as small mood
+  bars, while a bookies-and-mafia delusion storyline (horse racing, debts,
+  being followed) is revealed gradually as you earn its trust.
+- **Animals (U)** — the classic learning guessing game: think of an animal,
+  answer yes/no, and when it loses it asks for your animal plus a
+  distinguishing question and learns it forever. Ships with a 43-animal seed
+  tree, persists atomically to `animals_tree.json`, and always shows how
+  many animals it knows.
+- **Eliza vs Parry (V)** — a bonus mode that lets you watch the two bots
+  talk to each other, like the famous 1972 ARPANET conversation, with think
+  delays and `q` to stop the show.
+
+`install.sh`/`uninstall.sh` preserve Eliza memory and the Animals tree
+across reinstalls, just like scores and notes.
 
 ## Bored Points (BP)
 
@@ -190,6 +230,12 @@ python3 -m pytest tests/ -q
   persistence, CPU think delays/skips/env override, mocked full-article
   fetchers (Wikipedia/HN/DDG/Open Library), query cache TTL, reader
   scroll/find.
+- `tests/test_v16.py` — v1.6.0: Talk group — Eliza reflection, rank
+  selection, memory/fact recall, script size (>= 90 keywords, >= 400
+  reassemblies), no immediate repeats; Parry mood shifts and gradual
+  storyline; Animals learning + atomic persistence; bot-vs-bot exchange;
+  chat UI helpers; desktop entries/hotkeys; install/uninstall data
+  preservation. All fast via `GAMEBORED_NO_CPU_DELAY=1`.
 - `tests/test_pty.py` — drives the real app headlessly in a pseudo-terminal
   (80x24): launches each of the 16 games from the menu (including through
   the Sokoban/Runner room pickers), sends gameplay input, quits back to

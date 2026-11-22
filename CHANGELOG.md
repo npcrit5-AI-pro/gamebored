@@ -1,5 +1,45 @@
 # GameBored Changelog
 
+## v1.6.0 — Talk group: Eliza, Parry, Animals
+
+Three classic conversational programs plus a bot-vs-bot rematch, all
+offline and stdlib-only, in a new TALK desktop group (J/K/U/V) sharing one
+scrollable chat UI (PgUp/PgDn scroll, Up/Dn input history, help/save/quit,
+q leaves, transcripts auto-saved).
+
+- Eliza (`gamebored/eliza.py`, script in `gamebored/eliza_script.py`):
+  faithful Weizenbaum DOCTOR mechanics (keyword ranks, decomposition /
+  reassembly rules, I->you / my->your reflection, synonym groups, memory
+  stack for `my` statements, cycling reassemblies, `xnone` fallbacks) with
+  a script about double the classic size (117 keywords, 452 reassemblies,
+  easy to extend as plain data). Upgrades: remembers facts (name, likes,
+  family) in `eliza_memory.json` across visits (greeted by name on
+  return), refers back to earlier topics, handles greetings / goodbyes /
+  questions, never repeats the same reply twice in a row, human-feeling
+  think pause via `cpu.py`, session save.
+- Parry (`gamebored/parry.py`): the 1972 paranoid patient. Simulated
+  anger / fear / mistrust levels shift with what you say (hostility,
+  threats, kindness all move the needles), shown as small mood bars, and a
+  bookies-and-mafia delusion storyline (horse racing, debts, being
+  followed) is revealed gradually as trust grows.
+- Animals (`gamebored/animals.py`): the classic learning guessing game.
+  Ships with a 43-animal seed tree, learns your animal plus a
+  distinguishing question when wrong, persists the tree atomically to
+  `animals_tree.json`, and always shows how many animals it knows.
+- Eliza vs Parry (`gamebored/versus.py`): bonus mode that lets you watch
+  the two bots talk to each other like the 1972 ARPANET conversation,
+  with think delays and `q` to stop.
+- Shared chat UI (`gamebored/chatui.py`): wrapping, scroll math, and a
+  single-line editor with history, reused by every Talk app.
+- Desktop (`gamebored/app.py`): TALK group tiles, J/K/U/V hotkeys, footer
+  hints; About (`gamebored/sysinfo.py`) shows the script and tree counts.
+- `install.sh` / `uninstall.sh` now preserve `eliza_memory.json` and
+  `animals_tree.json` alongside scores/notes/settings.
+
+Full suite: 216+ passing (`python3 -m pytest tests -q`), including 46 new
+`tests/test_v16.py` tests, and `python3 -m gamebored --list` shows 16
+games + 15 apps.
+
 ## v1.5.0 — GameBored OS
 
 The menu is now a tiny desktop, the computer opponents feel human, and
